@@ -1,0 +1,19 @@
+{
+  "name": "gateway-maap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WatorVapor/maap-gateway.git#main"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WatorVapor/maap-gateway/issues"
+  },
+  "homepage": "https://github.com/WatorVapor/maap-gateway/tree/main#readme"
+}
