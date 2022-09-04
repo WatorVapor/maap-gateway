@@ -1,5 +1,47 @@
 import * as mqtt from 'mqtt'
 import WebSocket from 'ws';
+const MqttJwt = {
+  trace:false,
+  debug:true,
+};
+
+const ws = new WebSocket('wss://wator.xyz:8084/jwt');
+ws.on('open', (evt) => {
+  console.log('::::connected evt:=<',evt,'>');
+  onMqttJwtChannelOpened_(ws);
+});
+ws.on('error', (evt) => {
+  console.log('::::error evt:=<',evt,'>');
+});
+ws.on('close', (evt) => {
+  console.log('::::close evt:=<',evt,'>');
+});
+ws.on('message', (data) => {
+  console.log('::::message data:=<',data,'>');
+});
+
+const onMqttJwtChannelOpened_ = (wsClient) => {
+  if(MqttJwt.trace) {
+    console.log('onMqttJwtChannelOpened_::wsClient=<',wsClient,'>');
+  }  
+  const request = {
+    jwt:{
+      gate:true,
+      username:'',
+      clientid:'',
+      address:'',
+    }
+  };
+  if(MqttJwt.debug) {
+    console.log('onMqttJwtChannelOpened_::request=<',request,'>');
+  }
+  const signedReq = auth.sign(request);
+  if(MqttJwt.debug) {
+    console.log('onMqttJwtChannelOpened_::signedReq=<',signedReq,'>');
+  }
+  wsClient.send(JSON.stringify(signedReq));
+}
+
 
 /*
 const OPTIONS = {
