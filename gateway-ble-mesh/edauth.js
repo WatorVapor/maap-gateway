@@ -2,9 +2,40 @@ const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 const CryptoJS = require('crypto-js');
 const base32  = require('base32.js');
+const fs = require('fs');
 class EDAuth {
+  static debug = true;
   constructor() {
-    
+    this.keyPath_ = './keyMaster.json';
+    this.loadKey_();
+  }
+  sign(msgOrig) {
+    msgOrig.ts = new Date().toISOString();
+    const msgOrigStr = JSON.stringify(msgOrig);
+    const encoder = new TextEncoder();
+    const hash = nacl.hash(encoder.encode(msgOrigStr));
+    if(EDAuth.debug) {
+      console.log('EDAuth::sign::hash=<',hash,'>');
+    }
+    const hash512B64 = nacl.util.encodeBase64(hash);
+    if(EDAuth.debug) {
+      console.log('EDAuth::sign::hash512B64=<',hash512B64,'>');
+    }
+    const sha1MsgB64 = CryptoJS.SHA1(hash512B64).toString(CryptoJS.enc.Base64);
+    if(EDAuth.debug) {
+      console.log('EDAuth::sign::sha1MsgB64=<',sha1MsgB64,'>');
+    }
+    const sha1MsgBin = nacl.util.decodeBase64(sha1MsgB64);;
+    const signed = nacl.sign(sha1MsgBin,this.secBin_);
+    if(EDAuth.debug) {
+      console.log('EDAuth::sign::signed=<',signed,'>');
+    }
+    const signedB64 = nacl.util.encodeBase64(signed);
+    const signMsgObj = JSON.parse(msgOrigStr);
+    signMsgObj.auth = {};
+    signMsgObj.auth.pub = this.pubB64_;
+    signMsgObj.auth.sign = signedB64;
+    return signMsgObj;
   }
   verify(msg) {
     console.log('EDAuth::verify::msg=<',msg,'>');
@@ -66,7 +97,7 @@ class EDAuth {
 
   calcAddress_(b64Pub) {
     const binPub = nacl.util.decodeBase64(b64Pub);
-    this.calcAddressBin_(binPub);
+    return this.calcAddressBin_(binPub);
   }
   
   calcAddressBin_(binPub) {
@@ -81,7 +112,7 @@ class EDAuth {
     const sha1Buffer = Buffer.from(hash1pubBuffer);
     //console.log('EDAuth::calcAddressBin_:sha1Buffer=<',sha1Buffer.toString('hex'),'>');
     const address = base32.encode(sha1Buffer);
-    console.log('EDAuth::calcAddressBin_:address=<',address,'>');
+    //console.log('EDAuth::calcAddressBin_:address=<',address,'>');
     return address.toLowerCase();
   }
   
@@ -105,8 +136,51 @@ class EDAuth {
     const sha1Buffer = Buffer.from(hash1Buffer);
     //console.log('EDAuth::calcId:sha1Buffer=<',sha1Buffer.toString('hex'),'>');
     const address = base32.encode(sha1Buffer);
-    console.log('EDAuth::calcId:address=<',address,'>');
+    //console.log('EDAuth::calcId:address=<',address,'>');
     return address.toLowerCase();
+  }
+  loadKey_() {
+    try {
+      if (fs.existsSync(this.keyPath_)) {
+        const textKeyMaster = fs.readFileSync(this.keyPath_, 'utf8');
+        //console.log('EDAuth::loadKey_:textKeyMaster=<',textKeyMaster,'>');
+        const jsonKeyMaster = JSON.parse(textKeyMaster);        
+        //console.log('EDAuth::loadKey_:jsonKeyMaster=<',jsonKeyMaster,'>');
+        this.address_ = jsonKeyMaster.address;
+        this.pubB64_ = jsonKeyMaster.publicKey;
+        this.pubBin_ = nacl.util.decodeBase64(jsonKeyMaster.secretKey);
+        this.secB64_ = jsonKeyMaster.secretKey;
+        this.secBin_ = nacl.util.decodeBase64(jsonKeyMaster.secretKey);
+      } else {
+        this.createKey_();
+        this.loadKey_();
+      }
+    } catch(err) {
+      console.log('EDAuth::loadKey_:err=<',err,'>');
+    }
+  }
+  createKey_() {
+    const keyPair = this.miningKey_();
+    console.log('EDAuth::createKey_:keyPair=<',keyPair,'>');
+    const keySave  = {
+      address: keyPair.address,
+      publicKey: nacl.util.encodeBase64(keyPair.publicKey),
+      secretKey: nacl.util.encodeBase64(keyPair.secretKey),
+    }
+    console.log('EDAuth::createKey_:keySave=<',keySave,'>');
+    fs.writeFileSync(this.keyPath_, JSON.stringify(keySave,undefined,2));
+  }
+  miningKey_() {
+    while (true) {
+      const keyPair = nacl.sign.keyPair();
+      //console.log('EDAuth::miningKey_:keyPair=<',keyPair,'>');
+      const address = this.calcAddressBin_(keyPair.publicKey);
+      //console.log('EDAuth::miningKey_:address=<',address,'>');
+      if(address.startsWith('mp')) {
+        keyPair.address = address;
+        return keyPair;
+      }
+    }
   }
 }
 module.exports = EDAuth;

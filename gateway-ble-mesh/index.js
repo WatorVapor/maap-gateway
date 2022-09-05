@@ -20,7 +20,17 @@ ws.on('close', (evt) => {
   console.log('::::close evt:=<',evt,'>');
 });
 ws.on('message', (data) => {
-  console.log('::::message data:=<',data,'>');
+  try {
+    const jMsg = JSON.parse(data.toString('utf-8'));
+    if(MqttJwt.trace) {
+      console.log('::::message jMsg:=<',jMsg,'>');
+    }
+    if(jMsg.jwt && jMsg.payload) {
+      onMqttJWTMsg(jMsg.jwt,jMsg.payload);
+    }
+  } catch(err) {
+    console.log('::::message data:=<',data.toString('utf-8'),'>');
+  }
 });
 
 
@@ -30,10 +40,10 @@ const onMqttJwtChannelOpened_ = (wsClient) => {
   }  
   const request = {
     jwt:{
-      gate:true,
+      gateway:true,
       username:'',
-      clientid:'',
-      address:'',
+      clientid:auth.address_,
+      address:auth.address_,
     }
   };
   if(MqttJwt.debug) {
@@ -44,6 +54,13 @@ const onMqttJwtChannelOpened_ = (wsClient) => {
     console.log('onMqttJwtChannelOpened_::signedReq=<',signedReq,'>');
   }
   wsClient.send(JSON.stringify(signedReq));
+}
+
+const onMqttJWTMsg = (jwt,payload) => {
+  if(MqttJwt.debug) {
+    console.log('onMqttJWTMsg::jwt=<',jwt,'>');
+    console.log('onMqttJWTMsg::payload=<',payload,'>');
+  }  
 }
 
 
