@@ -1,11 +1,14 @@
-import * as mqtt from 'mqtt'
-import WebSocket from 'ws';
+const mqtt = require('mqtt');
+const WS = require('ws');
+const EDAuth = require('./edauth.js');
+const auth = new EDAuth();
+
 const MqttJwt = {
   trace:false,
   debug:true,
 };
 
-const ws = new WebSocket('wss://wator.xyz:8084/jwt');
+const ws = new WS.WebSocket('wss://wator.xyz:8084/jwt');
 ws.on('open', (evt) => {
   console.log('::::connected evt:=<',evt,'>');
   onMqttJwtChannelOpened_(ws);
@@ -19,6 +22,7 @@ ws.on('close', (evt) => {
 ws.on('message', (data) => {
   console.log('::::message data:=<',data,'>');
 });
+
 
 const onMqttJwtChannelOpened_ = (wsClient) => {
   if(MqttJwt.trace) {
