@@ -46,11 +46,11 @@ const onMqttJwtChannelOpened_ = (wsClient) => {
       address:auth.address_,
     }
   };
-  if(MqttJwt.debug) {
+  if(MqttJwt.trace) {
     console.log('onMqttJwtChannelOpened_::request=<',request,'>');
   }
   const signedReq = auth.sign(request);
-  if(MqttJwt.debug) {
+  if(MqttJwt.trace) {
     console.log('onMqttJwtChannelOpened_::signedReq=<',signedReq,'>');
   }
   wsClient.send(JSON.stringify(signedReq));

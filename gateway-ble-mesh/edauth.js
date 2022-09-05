@@ -4,7 +4,7 @@ const CryptoJS = require('crypto-js');
 const base32  = require('base32.js');
 const fs = require('fs');
 class EDAuth {
-  static debug = true;
+  static debug = false;
   constructor() {
     this.keyPath_ = './keyMaster.json';
     this.loadKey_();
