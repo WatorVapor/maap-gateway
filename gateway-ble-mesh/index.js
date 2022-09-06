@@ -2,6 +2,8 @@ const mqtt = require('mqtt');
 const WS = require('ws');
 const MaapAuth = require('./maapAuth.js');
 const auth = new MaapAuth();
+const StarMassion = require('./starMansion.js');
+const massion = new StarMassion();
 
 const MqttJwt = {
   trace:false,
