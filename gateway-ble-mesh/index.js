@@ -1,7 +1,7 @@
 const mqtt = require('mqtt');
 const WS = require('ws');
-const EDAuth = require('./edauth.js');
-const auth = new EDAuth();
+const MaapAuth = require('./maapAuth.js');
+const auth = new MaapAuth();
 
 const MqttJwt = {
   trace:false,
