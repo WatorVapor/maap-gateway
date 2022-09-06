@@ -3,6 +3,7 @@ nacl.util = require('tweetnacl-util');
 const CryptoJS = require('crypto-js');
 const base32  = require('base32.js');
 const fs = require('fs');
+
 class MaapAuth {
   static debug = false;
   constructor() {
