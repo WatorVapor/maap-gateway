@@ -95,15 +95,11 @@ const onMqttJWTMsg_ = (jwt,payload) => {
     reqMqttJwt_(ws);
   });
 
-  client.on('message', (channel,msg) => {
+  client.on('message', (topic,msg) => {
     //console.log('connect::client:=<',client,'>');
-    Graviton.onMQTTMsg_(channel,msg);
+    Graviton.onMQTTMsg_(topic,msg);
   });
-  client.subscribe(`${payload.username}/#`,{qos:1},(err, granted) => {
-    console.log('Graviton::subscribe::err:=<',err,'>');
-    console.log('Graviton::subscribe::granted:=<',granted,'>');
-  });
-  client.subscribe(`${payload.clientid}/#`,{qos:1},(err, granted) => {
+  client.subscribe(`${payload.username}/graviton/#`,{qos:1},(err, granted) => {
     console.log('Graviton::subscribe::err:=<',err,'>');
     console.log('Graviton::subscribe::granted:=<',granted,'>');
     Graviton.readyState = true;
@@ -123,18 +119,55 @@ class Graviton {
   }
   
   
-  static onMQTTMsg_(channel,msg) {
+  static onMQTTMsg_(topic,msg) {
     if(Graviton.trace) {
-      console.log('Graviton::onMQTTMsg_::channel=<',channel,'>');
+      console.log('Graviton::onMQTTMsg_::topic=<',topic,'>');
       console.log('Graviton::onMQTTMsg_::msg=<',msg.toString('utf-8'),'>');
       console.log('Graviton::onMQTTMsg_::Graviton.cbs=<',Graviton.cbs,'>');
     }
-    const jMsg = JSON.parse(msg.toString('utf-8'));
-    if(Graviton.debug) {
-      console.log('Graviton::onMQTTMsg_::channel=<',channel,'>');
-      console.log('Graviton::onMQTTMsg_::jMsg=<',jMsg,'>');
-      console.log('Graviton::onMQTTMsg_::Graviton.cbs=<',Graviton.cbs,'>');
+    try {
+      const jMsg = JSON.parse(msg.toString('utf-8'));
+      if(Graviton.trace) {
+        console.log('Graviton::onMQTTMsg_::topic=<',topic,'>');
+        console.log('Graviton::onMQTTMsg_::jMsg=<',jMsg,'>');
+      }
+      const goodMsg = auth.verify(jMsg);
+      if(Graviton.trace) {
+        console.log('Graviton::onMQTTMsg_::goodMsg=<',goodMsg,'>');
+      }
+      if(goodMsg) {
+        if(topic === jMsg.topic) {
+          Graviton.onGoodMQTTMsg_(topic,jMsg);
+        } else {
+          console.log('Graviton::onMQTTMsg_::topic=<',topic,'>');
+          console.log('Graviton::onMQTTMsg_::jMsg.topic=<',jMsg.topic,'>');          
+        }
+      } else {
+        console.log('Graviton::onMQTTMsg_::topic=<',topic,'>');
+        console.log('Graviton::onMQTTMsg_::jMsg=<',jMsg,'>');        
+      }
+    } catch(err) {
+      console.error('Graviton::onMQTTMsg_::err=<',err,'>');
     }
+  }
+  static onGoodMQTTMsg_(topic,msg) {
+    if(Graviton.debug) {
+      console.log('Graviton::onGoodMQTTMsg_::topic=<',topic,'>');
+      console.log('Graviton::onGoodMQTTMsg_::msg=<',msg.toString('utf-8'),'>');
+      console.log('Graviton::onGoodMQTTMsg_::Graviton.cbs=<',Graviton.cbs,'>');
+    }
+    if(topic.endsWith('graviton/joined')) {
+      Graviton.onGoodGravitonJoined_(msg);
+    } else if('#') {
+      
+    } else {
+      console.log('Graviton::onGoodMQTTMsg_::topic=<',topic,'>');      
+    }
+  }
+  static onGoodGravitonJoined_(jMsg) {
+    if(Graviton.debug) {
+      console.log('Graviton::onGoodGravitonJoined_::jMsg=<',jMsg,'>');
+    }    
   }
   
   checkMqttReady_() {
@@ -151,7 +184,10 @@ class Graviton {
     if(Graviton.trace) {
       console.log('Graviton::invokeAtMqttReady_::mqttApp=<',mqttApp,'>');
     }
+    const topic = 'joined';
+    const fullTopic = `${mqttApp.username}/graviton/${topic}`;
     const helloWorld = {
+      topic: fullTopic,
       clientid:mqttApp.clientid,
       username:mqttApp.username,
       address:auth.address_,
@@ -160,21 +196,20 @@ class Graviton {
     if(Graviton.debug) {
       console.log('Graviton::invokeAtMqttReady_::helloWorld=<',helloWorld,'>');
     }
-    this.broadcast_('graviton/joined',helloWorld);
+    this.publish_(fullTopic,helloWorld);
   }
   
-  broadcast_(topic,msg) {
+  publish_(fullTopic,msg) {
     const signedMsg = auth.sign(msg);
     if(Graviton.debug) {
-      console.log('Graviton::broadcast_::signedMsg=<',signedMsg,'>');
+      console.log('Graviton::publish_::signedMsg=<',signedMsg,'>');
     }
-    const fullTopic = `${mqttApp.username}/${topic}`;
     if(Graviton.debug) {
-      console.log('Graviton::broadcast_::fullTopic=<',fullTopic,'>');
+      console.log('Graviton::publish_::fullTopic=<',fullTopic,'>');
     }
     mqttApp.client.publish(fullTopic,JSON.stringify(signedMsg),{qos:1},(err) => {
       if(Graviton.debug) {
-        console.log('Graviton::broadcast_::err=<',err,'>');
+        console.log('Graviton::publish_::err=<',err,'>');
       }      
     });
   }
