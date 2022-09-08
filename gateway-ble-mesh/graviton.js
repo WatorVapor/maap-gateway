@@ -112,8 +112,8 @@ const onMqttJWTMsg_ = (jwt,payload) => {
 }
 
 class Graviton {
-  static debug = true;
   static trace = false;
+  static debug = true;
   static readyState = false;
   static cbs = [];
   constructor(cb) {
@@ -126,7 +126,13 @@ class Graviton {
   static onMQTTMsg_(channel,msg) {
     if(Graviton.trace) {
       console.log('Graviton::onMQTTMsg_::channel=<',channel,'>');
-      console.log('Graviton::onMQTTMsg_::msg=<',msg,'>');
+      console.log('Graviton::onMQTTMsg_::msg=<',msg.toString('utf-8'),'>');
+      console.log('Graviton::onMQTTMsg_::Graviton.cbs=<',Graviton.cbs,'>');
+    }
+    const jMsg = JSON.parse(msg.toString('utf-8'));
+    if(Graviton.debug) {
+      console.log('Graviton::onMQTTMsg_::channel=<',channel,'>');
+      console.log('Graviton::onMQTTMsg_::jMsg=<',jMsg,'>');
       console.log('Graviton::onMQTTMsg_::Graviton.cbs=<',Graviton.cbs,'>');
     }
   }
@@ -149,6 +155,7 @@ class Graviton {
       clientid:mqttApp.clientid,
       username:mqttApp.username,
       address:auth.address_,
+      offer:true,
     }
     if(Graviton.debug) {
       console.log('Graviton::invokeAtMqttReady_::helloWorld=<',helloWorld,'>');
