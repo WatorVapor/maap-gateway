@@ -22,7 +22,7 @@ void receivedCallback( uint32_t from, String &msg ) {
 }
 
 void newConnectionCallback(uint32_t nodeId) {
-    Serial.printf("--> startHere: New Connection, nodeId = %u\r\n", nodeId);
+  Serial.printf("--> startHere: New Connection, nodeId = %u\r\n", nodeId);
 }
 
 void changedConnectionCallback() {
@@ -30,7 +30,7 @@ void changedConnectionCallback() {
 }
 
 void nodeTimeAdjustedCallback(int32_t offset) {
-    Serial.printf("Adjusted time %u. Offset = %d\r\n", mesh.getNodeTime(),offset);
+  Serial.printf("Adjusted time %u. Offset = %d\r\n", mesh.getNodeTime(),offset);
 }
 
 void setup_wifi_mesh(void) {
@@ -47,6 +47,7 @@ void setup_wifi_mesh(void) {
 void WifiMeshTask( void * parameter) {
   setup_wifi_mesh();
   while(true) {
+    mesh.update();
     delay(100);
   }
 }
