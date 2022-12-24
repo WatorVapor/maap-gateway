@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <mutex>
+#include <string>
 #include "painlessMesh.h"
 #define   MESH_PREFIX     "pYZviUVDQrjaNsD5"
 #define   MESH_PASSWORD   "Fqji4aPp"
@@ -89,7 +90,16 @@ void setup_wifi_mesh(void) {
   taskSendMessage.enable();
 }
 
+
+static const std::string Prefix("/spiffs");
+void loadConfig(void) {
+  SPIFFS.begin();
+  std::string settings = Prefix + "/config.wifi.mesh.json";
+  SPIFFS.end();
+}
+
 void WifiMeshTask( void * parameter) {
+  loadConfig();
   setup_wifi_mesh();
   while(true) {
     mesh.update();
@@ -107,3 +117,4 @@ void WifiMeshTask( void * parameter) {
     delay(10);
   }
 }
+
