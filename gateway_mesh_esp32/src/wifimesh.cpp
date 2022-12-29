@@ -102,7 +102,7 @@ static StaticJsonDocument<512> meshReaddoc;
 #define   MESH_PORT       5555
 
 void loadConfig(void) {
-  SPIFFS.begin();
+  SPIFFS.begin(true);
   std::string settings = Prefix + "/config.wifi.mesh.json";
   auto isExists =  SPIFFS.exists(settings.c_str());
   if(isExists) {
@@ -149,6 +149,9 @@ void loadConfig(void) {
     mesh_port = MESH_PORT;
   }
   SPIFFS.end();
+  LOG_S(mesh_prefix);
+  LOG_S(mesh_password);
+  LOG_I(mesh_port);
 }
 
 void WifiMeshTask( void * parameter) {
