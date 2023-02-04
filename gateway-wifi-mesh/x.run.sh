@@ -3,8 +3,6 @@ SCRIPT_DIR=$(cd $(dirname $0); pwd)
 PARENT_DiR=$(dirname $SCRIPT_DIR)
 echo "SCRIPT_DIR:=${SCRIPT_DIR}"
 echo "PARENT_DiR:=${PARENT_DiR}"
-DOCKER_MAME="maap-gate-wifi-mesh"
-docker stop ${DOCKER_MAME}
 docker run -it \
   -v /etc/group:/etc/group:ro \
   -v /etc/passwd:/etc/passwd:ro \
@@ -15,7 +13,6 @@ docker run -it \
   -u $(id -u $USER):$(id -g $USER) \
   -w ${SCRIPT_DIR} \
   --net host \
-  --name ${DOCKER_MAME} \
   --memory=256M \
   --cpu-shares=128 \
   node:lts /bin/bash
