@@ -1,0 +1,27 @@
+{
+  "name": "gateway-maap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WatorVapor/maap-gateway.git#main"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WatorVapor/maap-gateway/issues"
+  },
+  "homepage": "https://github.com/WatorVapor/maap-gateway/tree/main#readme",
+  "dependencies": {
+    "base32.js": "^0.1.0",
+    "crypto-js": "^4.1.1",
+    "mqtt": "^4.3.7",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
+    "ws": "^8.8.1"
+  }
+}
