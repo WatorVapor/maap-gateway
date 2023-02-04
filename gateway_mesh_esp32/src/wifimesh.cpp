@@ -3,9 +3,12 @@
 #include <mutex>
 #include <string>
 #include "painlessMesh.h"
-#define   MESH_PREFIX     "pYZviUVDQrjaNsD5"
-#define   MESH_PASSWORD   "Fqji4aPp"
-#define   MESH_PORT       5555
+#include "debug.hpp"
+
+
+static String mesh_prefix;
+static String mesh_password;
+static int16_t mesh_port;
 
 static Scheduler userScheduler;
 static painlessMesh  mesh;
@@ -81,7 +84,7 @@ void nodeTimeAdjustedCallback(int32_t offset) {
 
 void setup_wifi_mesh(void) {
   mesh.setDebugMsgTypes( ERROR );
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
+  mesh.init( mesh_prefix, mesh_password, &userScheduler, mesh_port );
   mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
   mesh.onChangedConnections(&changedConnectionCallback);
@@ -92,10 +95,63 @@ void setup_wifi_mesh(void) {
 
 
 static const std::string Prefix("/spiffs");
+static StaticJsonDocument<512> meshSavedoc;
+static StaticJsonDocument<512> meshReaddoc;
+#define   MESH_PREFIX     "pYZviUVDQrjaNsD5"
+#define   MESH_PASSWORD   "Fqji4aPp"
+#define   MESH_PORT       5555
+
 void loadConfig(void) {
-  SPIFFS.begin();
+  SPIFFS.begin(true);
   std::string settings = Prefix + "/config.wifi.mesh.json";
+  auto isExists =  SPIFFS.exists(settings.c_str());
+  if(isExists) {
+    File fp = SPIFFS.open(settings.c_str(),FILE_READ);
+    if(fp){
+      const int fileSize = fp.size();
+      LOG_I(fileSize);
+      if(fileSize < 512) {
+        char buff[fileSize];
+        auto readSize = fp.readBytes(buff,fileSize);
+        LOG_I(readSize);
+        meshReaddoc.clear();
+        DeserializationError error = deserializeJson(meshReaddoc, buff);
+        LOG_I(error);
+        if(error == DeserializationError::Ok) {
+          if(meshReaddoc.containsKey("ssid")) {
+            mesh_prefix = meshReaddoc["ssid"].as<String>();
+          }
+          if(meshReaddoc.containsKey("password")) {
+            mesh_password = meshReaddoc["password"].as<String>();
+          }
+          if(meshReaddoc.containsKey("port")) {
+           mesh_port = meshReaddoc["port"].as<int>();
+          }
+        }
+      }
+    }
+  } else {
+    meshSavedoc.clear();
+    meshSavedoc["ssid"] = MESH_PREFIX;
+    meshSavedoc["password"] = MESH_PASSWORD;
+    meshSavedoc["port"] = MESH_PORT;
+    std::string saveStr;
+    serializeJson(meshSavedoc, saveStr);
+    LOG_S(saveStr);
+    auto fs = SPIFFS.open(settings.c_str(),FILE_WRITE);
+    if(fs.available()) {
+      fs.print(saveStr.c_str());
+      fs.flush();
+      fs.close();
+    }
+    mesh_prefix = MESH_PREFIX;
+    mesh_password = MESH_PASSWORD;
+    mesh_port = MESH_PORT;
+  }
   SPIFFS.end();
+  LOG_S(mesh_prefix);
+  LOG_S(mesh_password);
+  LOG_I(mesh_port);
 }
 
 void WifiMeshTask( void * parameter) {
