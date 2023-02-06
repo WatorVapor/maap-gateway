@@ -14,5 +14,5 @@ docker run -it \
   -w ${SCRIPT_DIR} \
   --net host \
   --memory=256M \
-  --cpu-shares=128 \
+  --cpus="1.5" \
   node:lts /bin/bash
