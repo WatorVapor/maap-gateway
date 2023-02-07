@@ -1,10 +1,10 @@
 const iConstOneDayMs = 1000*3600*24;
 const Level = require('level').Level;
-console.log('::::Level=<',Level,'>');
+//console.log('::::Level=<',Level,'>');
 const nacl = require('tweetnacl');
-console.log('::::nacl=<',nacl,'>');
+//console.log('::::nacl=<',nacl,'>');
 nacl.util = require('tweetnacl-util');
-console.log('::::nacl.util=<',nacl.util,'>');
+//console.log('::::nacl.util=<',nacl.util,'>');
 const CryptoJS = require('crypto-js');
 const base32 = require('base32.js');
 

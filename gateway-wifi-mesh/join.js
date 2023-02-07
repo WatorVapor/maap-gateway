@@ -7,14 +7,23 @@ if(process.argv.length < 3) {
 const address = process.argv[2];
 console.log(':::: address:=<',address,'>');
 const chainStore = new Level('maap_evidence_chain', { valueEncoding: 'json' });
-console.log(':::: chainStore:=<',chainStore,'>');
+//console.log(':::: chainStore:=<',chainStore,'>');
 
 const loadGuestDocument = async () => {
   await chainStore.open();
-  console.log('::loadGuestDocument::chainStore.status:=<',chainStore.status,'>');
-  const chainTop = await chainStore.get('top');
-  console.log('::loadGuestDocument::chainTop:=<',chainTop,'>');
-  if()
+  //console.log('::loadGuestDocument::chainStore.status:=<',chainStore.status,'>');
+  const chainTopStr = await chainStore.get('top');
+  //console.log('::loadGuestDocument::chainTopStr:=<',chainTopStr,'>');
+  if(chainTopStr) {
+    const chainTop = JSON.parse(chainTopStr);
+    //console.log('::loadGuestDocument::chainTop:=<',chainTop,'>');
+    if(chainTop && chainTop.id) {
+      if(chainTop.id.endsWith(address)) {
+        return onGoodGuestDid(chainTop);
+      }
+    }
+  }
+  createGuestDocument();
 }
 loadGuestDocument();
 
@@ -25,3 +34,6 @@ const createGuestDocument = async ()=> {
   });  
 }
 
+const onGoodGuestDid = (chainTop) => {
+  console.log('::onGoodGuestDid::chainTop:=<',chainTop,'>');  
+}
