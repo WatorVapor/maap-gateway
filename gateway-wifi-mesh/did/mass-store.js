@@ -16,7 +16,7 @@ class MassStore {
   constructor(keyAddress,readycb) {
     this.readyCB_ = readycb;
     this.massStore_ = new Level('maap_mass_store', { valueEncoding: 'json' });
-    if(MassStore.debug2) {
+    if(MassStore.trace) {
       console.log('MassStore::constructor::this.massStore_=<',this.massStore_,'>');
     }
     if(keyAddress) {
@@ -182,7 +182,7 @@ class MassStore {
   }  
   async save2Storage_(keyPair){
     const ready = await this.massStore_.open();
-    if(MassStore.debug2) {
+    if(MassStore.trace) {
       console.log('MassStore::save2Storage_:this.massStore_=<',this.massStore_,'>');
     }
     const b64Pri = nacl.util.encodeBase64(keyPair.secretKey);

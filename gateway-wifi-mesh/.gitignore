@@ -107,3 +107,4 @@ package-lock.json
 keyMaster.json
 maap.json
 maap_mass_store/
+maap_evidence_chain/

@@ -15,4 +15,4 @@ docker run -it \
   --net host \
   --memory=256M \
   --cpus="1.5" \
-  node:lts /bin/bash
+  node:lts-slim /bin/bash
