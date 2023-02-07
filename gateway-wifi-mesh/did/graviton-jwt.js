@@ -1,5 +1,5 @@
-import {MassStore} from './mass-store.js';
-export class GravitonJWT {
+const MassStore = require('./mass-store.js').MassStore;
+class GravitonJWT {
   static trace = false;
   static debug = true;
   constructor(evidences,mass,resolve,cb) {
@@ -96,3 +96,6 @@ export class GravitonJWT {
   }
 }
 
+module.exports = {
+  GravitonJWT:GravitonJWT,
+}

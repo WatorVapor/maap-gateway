@@ -1,9 +1,11 @@
-import {DIDSeedDocument,DIDLinkedDocument,DIDGuestDocument} from './document.js';
-import {Graviton} from './graviton.js';
+const Graviton = require('./graviton.js').Graviton;
+const docDid_ = require('./document.js');
+const DIDSeedDocument = docDid_.DIDSeedDocument;
+const DIDLinkedDocument = docDid_.DIDLinkedDocument;
+const DIDGuestDocument = docDid_.DIDGuestDocument;
+const Level = require('level').Level;
 
-import {Level} from 'https://cdn.jsdelivr.net/npm/level@8.0.0/+esm'
-
-export class Evidence {
+class Evidence {
   static trace = false;
   static debug = true;
   static did_method = 'maap';
@@ -113,7 +115,7 @@ export class Evidence {
 
 }
 
-export class ChainOfEvidence {
+class ChainOfEvidence {
   static trace = false;
   static debug = true;
   static chainPrefix = 'didteam/cov';
@@ -396,3 +398,7 @@ export class ChainOfEvidence {
   }
 }
 
+module.exports = {
+  ChainOfEvidence:ChainOfEvidence,
+  Evidence:Evidence,
+}

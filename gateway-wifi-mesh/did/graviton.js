@@ -1,7 +1,8 @@
-import {MassStore} from './mass-store.js';
-import {GravitonJWT} from './graviton-jwt.js';
+const MassStore = require('./mass-store.js').MassStore;
+const GravitonJWT = require('./graviton-jwt.js').GravitonJWT;
+
 const iConstOneHourInMs  = 1000 * 3600;
-export class Graviton {
+class Graviton {
   static trace = false;
   static debug = true;
   constructor(evidences,mass,resolve,cb) {
@@ -163,3 +164,6 @@ export class Graviton {
   }
 }
 
+module.exports = {
+  Graviton:Graviton,
+}
