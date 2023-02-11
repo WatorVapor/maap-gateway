@@ -1,15 +1,39 @@
 const Level = require('level').Level;
 const DIDGuestDocument = require('./did/document.js').DIDGuestDocument;
-const evidence = require('./did/evidence.js');
+const evidence = require('./did/evidence.js')
+const ChainOfEvidence = evidence.ChainOfEvidence;
+const Evidence = evidence.ChainOfEvidence;
+
+
+const process = require('process');
 
 if(process.argv.length < 3) {
   process.exit(0);
 }
 const address = process.argv[2];
 console.log(':::: address:=<',address,'>');
+
+/*
 const chainStore = new Level('maap_evidence_chain', { valueEncoding: 'json' });
 //console.log(':::: chainStore:=<',chainStore,'>');
+*/
 
+const coc = new ChainOfEvidence();
+console.log(':::: coc:=<',coc,'>');
+coc.joinDid(address,()=>{
+  
+})
+
+process.on('beforeExit', (code) => {
+  coc.destroy();
+  console.log('Process beforeExit event with code: ', code);
+});
+process.on('exit', (code) => {
+  console.log('Process exit event with code: ', code);
+});
+
+
+/*
 const loadGuestDocument = async () => {
   await chainStore.open();
   //console.log('::loadGuestDocument::chainStore.status:=<',chainStore.status,'>');
@@ -42,4 +66,8 @@ const createGuestDocument = async () => {
 
 const onGoodGuestDid = (chainTop) => {
   console.log('::onGoodGuestDid::chainTop:=<',chainTop,'>');
+  //const service = chainTop.service;
+  //console.log('::onGoodGuestDid::service:=<',service,'>');
 }
+*/
+

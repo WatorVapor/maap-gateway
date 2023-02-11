@@ -4,6 +4,9 @@ const DIDSeedDocument = docDid_.DIDSeedDocument;
 const DIDLinkedDocument = docDid_.DIDLinkedDocument;
 const DIDGuestDocument = docDid_.DIDGuestDocument;
 const Level = require('level').Level;
+const Const = require('./const.js');
+const { execSync } = require('child_process');
+
 
 class Evidence {
   static trace = false;
@@ -123,8 +126,28 @@ class ChainOfEvidence {
     this.topEvidence_ = false;
     this.cb_ = cb;
     this.allBlocks_ = [];
-    this.chainStore_ = new Level('maap_evidence_chain', { valueEncoding: 'json' });
+    const config = {
+      createIfMissing: true,
+      valueEncoding: 'json',
+    };
+    const rmOutput = execSync('rm -rf maap_evidence_chain/LOCK');
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::constructor:rmOutput=<',rmOutput.toString('utf-8'),'>');
+    }
+    try {
+      this.chainStore_ = new Level('maap_evidence_chain', config);
+    } catch(err) {
+      if(ChainOfEvidence.debug) {
+        console.log('ChainOfEvidence::constructor:err=<',err,'>');
+      }
+    }
     this.loadEvidence_();
+  }
+  destroy() {
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::destroy:this.chainStore_.status=<',this.chainStore_.status,'>');
+    }
+    this.chainStore_.close();
   }
   address() {
     if(ChainOfEvidence.debug) {
@@ -166,7 +189,7 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::joinDid:self.topEvidence_=<',self.topEvidence_.coc_,'>');
       }
       self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      localStorage.setItem(constDIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
+      this.chainStore_.put(Const.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
       if(typeof cb === 'function') {
         cb();
       }
@@ -251,32 +274,42 @@ class ChainOfEvidence {
     this.graviton_.publish(topic,msg);
   }
   
-  loadEvidence_() {
-    const topEviStr = localStorage.getItem(constDIDTeamAuthEvidenceTop);
-    if(ChainOfEvidence.trace) {
-      console.log('ChainOfEvidence::loadEvidence_:topEviStr=<',topEviStr,'>');
+  async loadEvidence_() {
+    await this.chainStore_.open();
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::loadEvidence_:this.chainStore_.status=<',this.chainStore_.status,'>');
     }
-    if(topEviStr) {
-      const topEviJson = JSON.parse(topEviStr);
+    try {
+      const topEviStr = await this.chainStore_.get(Const.DIDTeamAuthEvidenceTop);
       if(ChainOfEvidence.trace) {
-        console.log('ChainOfEvidence::loadEvidence_:topEviJson=<',topEviJson,'>');
+        console.log('ChainOfEvidence::loadEvidence_:topEviStr=<',topEviStr,'>');
       }
-      if(topEviJson) {
-        const self = this;
-        this.topEvidence_ = new Evidence(topEviJson,()=>{
-          self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-          self.pull2Root_(self.topEvidence_.coc_,(evidences)=>{
-            if(ChainOfEvidence.debug) {
-              console.log('ChainOfEvidence::loadEvidence_:evidences=<',evidences,'>');
-            }            
+      if(topEviStr) {
+        const topEviJson = JSON.parse(topEviStr);
+        if(ChainOfEvidence.trace) {
+          console.log('ChainOfEvidence::loadEvidence_:topEviJson=<',topEviJson,'>');
+        }
+        if(topEviJson) {
+          const self = this;
+          this.topEvidence_ = new Evidence(topEviJson,()=>{
+            self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
+            self.pull2Root_(self.topEvidence_.coc_,(evidences)=>{
+              if(ChainOfEvidence.debug) {
+                console.log('ChainOfEvidence::loadEvidence_:evidences=<',evidences,'>');
+              }            
+            });
+            self.createConnection_(self.topEvidence_);
+            if(typeof self.cb_ === 'function') {
+              self.cb_(true);
+            }
           });
-          self.createConnection_(self.topEvidence_);
-          if(typeof self.cb_ === 'function') {
-            self.cb_(true);
-          }
-        });
+        }
+      } else {
       }
-    } else {
+    } catch (err) {
+      if(ChainOfEvidence.debug) {
+        console.log('ChainOfEvidence::loadEvidence_:err=<',err,'>');
+      }      
     }
   }
   createConnection_(topEvid) {
