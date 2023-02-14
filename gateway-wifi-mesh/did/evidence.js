@@ -4,7 +4,7 @@ const DIDSeedDocument = docDid_.DIDSeedDocument;
 const DIDLinkedDocument = docDid_.DIDLinkedDocument;
 const DIDGuestDocument = docDid_.DIDGuestDocument;
 const Level = require('level').Level;
-const Const = require('./const.js');
+const strConst = require('./const.js');
 const { execSync } = require('child_process');
 
 
@@ -189,7 +189,7 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::joinDid:self.topEvidence_=<',self.topEvidence_.coc_,'>');
       }
       self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      this.chainStore_.put(Const.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
+      this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
       if(typeof cb === 'function') {
         cb();
       }
@@ -280,7 +280,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::loadEvidence_:this.chainStore_.status=<',this.chainStore_.status,'>');
     }
     try {
-      const topEviStr = await this.chainStore_.get(Const.DIDTeamAuthEvidenceTop);
+      const topEviStr = await this.chainStore_.get(strConst.DIDTeamAuthEvidenceTop);
       if(ChainOfEvidence.trace) {
         console.log('ChainOfEvidence::loadEvidence_:topEviStr=<',topEviStr,'>');
       }

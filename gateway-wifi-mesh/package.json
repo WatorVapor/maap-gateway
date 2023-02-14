@@ -22,6 +22,7 @@
     "level": "^8.0.0",
     "mqtt": "^4.3.7",
     "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1"
+    "tweetnacl-util": "^0.15.1",
+    "ws": "^8.12.1"
   }
 }

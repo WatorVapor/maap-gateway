@@ -1,7 +1,14 @@
+const WebSocket = require('ws').WebSocket;
+const Level = require('level').Level;
 const MassStore = require('./mass-store.js').MassStore;
+const strConst = require('./const.js');
+
+const iConstOneHourInMs  = 1000 * 3600;
+
 class GravitonJWT {
   static trace = false;
   static debug = true;
+  static store_ = false;
   constructor(evidences,mass,resolve,cb) {
     if(GravitonJWT.trace) {
       console.log('GravitonJWT::constructor:evidences=<',evidences,'>');
@@ -10,6 +17,55 @@ class GravitonJWT {
     this.mqttJwt_ = resolve;
     this.mass_ = mass;
     this.cb_ = cb;
+    const config = {
+      createIfMissing: true,
+      valueEncoding: 'json',
+    };
+    if(!GravitonJWT.store_) {
+      GravitonJWT.store_ = new Level('maap_graviton_store', config);
+    }
+    this.checkLocalStorageOfMqttJwt_();
+  }
+
+  async checkLocalStorageOfMqttJwt_() {
+    if(GravitonJWT.debug) {
+      console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:this.mass_=<',this.mass_,'>');
+    }
+    const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.mass_.address_}`;
+    if(GravitonJWT.debug) {
+      console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwtLSKey=<',jwtLSKey,'>');
+    }
+    await GravitonJWT.store_.open();
+    if(GravitonJWT.debug) {
+      console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:GravitonJWT.store_.status=<',GravitonJWT.store_.status,'>');
+    }
+    try {
+      const jwtStr = await GravitonJWT.store_.get(jwtLSKey);
+      const jwt = JSON.parse(jwtStr);
+      if(GravitonJWT.debug) {
+        console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwt=<',jwt,'>');
+      }
+      if(jwt.payload && jwt.payload.exp ) {
+        const jwtExpDate = new Date();
+        const timeInMs = parseInt(jwt.payload.exp) *1000;
+        jwtExpDate.setTime(timeInMs);
+        if(GravitonJWT.debug) {
+          console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwtExpDate=<',jwtExpDate,'>');
+        }
+        const exp_remain_ms = jwtExpDate - new Date();
+        if(GravitonJWT.debug) {
+          console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:exp_remain_ms=<',exp_remain_ms,'>');
+        }
+        if(exp_remain_ms > iConstOneHourInMs) {
+          this.cb_(jwt);
+          return;
+        }
+      }
+    } catch(err) {
+      if(!err.notFound) {
+        console.error('GravitonJWT::checkLocalStorageOfMqttJwt_:err=<',err,'>');
+      }
+    }
     this.reqMqttAuthOfJwt_();
   }
   
@@ -81,17 +137,18 @@ class GravitonJWT {
     }
     wsClient.send(JSON.stringify(signedJwtReq));
   }
-  onMqttJwtReply_(jwt,payload,origData) {
+  async onMqttJwtReply_(jwt,payload,origData) {
     if(GravitonJWT.debug) {
       console.log('onMqttJwtReply_::jwt=<',jwt,'>');
       console.log('onMqttJwtReply_::payload=<',payload,'>');
     }
     if(payload.keyid) {
-      const jwtLSKey = `${constDIDTeamAuthGravitonJwtPrefix}/${payload.keyid}`;
-      localStorage.setItem(jwtLSKey,origData);
-    }
-    if(typeof this.cb_ === 'function') {
-      this.cb_();
+      const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${payload.keyid}`;
+      if(GravitonJWT.debug) {
+        console.log('onMqttJwtReply_::jwtLSKey=<',jwtLSKey,'>');
+      }
+      await GravitonJWT.store_.put(jwtLSKey,origData);
+      this.checkLocalStorageOfMqttJwt_();
     }
   }
 }
