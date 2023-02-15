@@ -184,12 +184,12 @@ class ChainOfEvidence {
   joinDid(id,cb) {
     const guestEviJson = {id:id,_maap_guest:true};
     const self = this;
-    this.topEvidence_ = new Evidence(guestEviJson,()=> {
+    this.topEvidence_ = new Evidence(guestEviJson,async ()=> {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::joinDid:self.topEvidence_=<',self.topEvidence_.coc_,'>');
       }
       self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
+      await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
       if(typeof cb === 'function') {
         cb();
       }
@@ -205,7 +205,7 @@ class ChainOfEvidence {
     return false;
   }
   reqJoinTeam(passcode) {
-    if(ChainOfEvidence.debug) {
+    if(ChainOfEvidence.trace) {
       console.log('ChainOfEvidence::reqJoinTeam:this.topEvidence_=<',this.topEvidence_,'>');
     }
     if(this.isMember()) {
@@ -216,7 +216,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::reqJoinTeam:this.graviton_=<',this.graviton_,'>');
       return;      
     }
-    if(ChainOfEvidence.debug) {
+    if(ChainOfEvidence.trace) {
       console.log('ChainOfEvidence::reqJoinTeam:this.graviton_=<',this.graviton_,'>');
     }
     const topic = `${this.topEvidence_.address()}/invited/req/join/team`
@@ -299,9 +299,6 @@ class ChainOfEvidence {
               }            
             });
             self.createConnection_(self.topEvidence_);
-            if(typeof self.cb_ === 'function') {
-              self.cb_(true);
-            }
           });
         }
       } else {
@@ -313,7 +310,7 @@ class ChainOfEvidence {
     }
   }
   createConnection_(topEvid) {
-    if(ChainOfEvidence.debug) {
+    if(ChainOfEvidence.trace) {
       console.log('ChainOfEvidence::createConnection_:topEvid=<',topEvid,'>');
     }
     const evidences = [this.topEvidence_.document()];
@@ -324,6 +321,9 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::createConnection_:good=<',good,'>');
       }
       self.graviton_.ready = good;
+      if(typeof self.cb_ === 'function') {
+        self.cb_(true);
+      }
     });
     this.graviton_.onMQTTMsg = (topic,jMsg) => {
       if(ChainOfEvidence.debug) {

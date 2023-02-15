@@ -34,19 +34,6 @@ class Graviton {
     this.mqttClient_.publish(topic,JSON.stringify(msgSigned));
   }
   
-/*
-  reqMqttAuthOfJwt_() {
-    if(Graviton.trace) {  
-      console.log('Graviton::reqMqttAuthOfJwt_:this.evidences_=<',this.evidences_,'>');
-    }
-    this.jwtReq_.reqMqttAuthOfJwt();
-    const self = this;
-    const jwtReq = new GravitonJWT(this.evidences_,this.mass_,this.mqttJwt_,()=>{
-      self.checkLocalStorageOfMqttJwt_();
-    });
-  }
-*/
-  
   createMqttConnection_(jwt,payload) {
     if(Graviton.debug) {
       console.log('Graviton::createMqttConnection_:payload=<',payload,'>');
@@ -72,6 +59,9 @@ class Graviton {
     const self = this;
     this.mqttClient_.on('connect', () => {
       console.log('Graviton::createMqttConnection_ connect self.mqttClient_.connected:=<', self.mqttClient_.connected, '>');
+      if(typeof self.cb_ === 'function') {
+        self.cb_(true);
+      }
     });
     this.mqttClient_.on('message', (channel, message) => {
       self.onMqttMessage_(channel, message);

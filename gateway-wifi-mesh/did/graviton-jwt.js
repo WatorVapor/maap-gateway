@@ -80,12 +80,12 @@ class GravitonJWT {
       console.log('GravitonJWT::createMqttAuthOfJwtConnection_:this.mqttJwt_=<',this.mqttJwt_,'>');
     }    
     const wsClient = new WebSocket(this.mqttJwt_);
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('GravitonJWT::wsClient=<',wsClient,'>');
     }
     const self = this;
     wsClient.onopen = (evt)=> {
-      if(GravitonJWT.debug) {
+      if(GravitonJWT.trace) {
         console.log('GravitonJWT::createMqttAuthOfJwtConnection_::onopen:evt=<',evt,'>');
       }
       setTimeout(()=>{
@@ -93,7 +93,7 @@ class GravitonJWT {
       },100)
     }
     wsClient.onclose = (evt)=> {
-      if(GravitonJWT.debug) {
+      if(GravitonJWT.trace) {
         console.log('GravitonJWT::createMqttAuthOfJwtConnection_::onclose:evt=<',evt,'>');
       }
     }
@@ -101,12 +101,12 @@ class GravitonJWT {
       console.error('GravitonJWT::createMqttAuthOfJwtConnection_::onerror:err=<',err,'>');
     }
     wsClient.onmessage = (evt)=> {
-      if(GravitonJWT.debug) {
+      if(GravitonJWT.trace) {
         console.log('GravitonJWT::createMqttAuthOfJwtConnection_::onmessage:evt=<',evt,'>');
       }
       try {
         const msg = JSON.parse(evt.data);
-        if(GravitonJWT.debug) {
+        if(GravitonJWT.trace) {
           console.log('GravitonJWT::createMqttAuthOfJwtConnection_::onmessage:msg=<',msg,'>');
         }
         if(msg.jwt && msg.payload) {
@@ -119,7 +119,7 @@ class GravitonJWT {
 
   }
   onMqttJwtChannelOpened_ (wsClient) {
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('onMqttJwtChannelOpened_::wsClient=<',wsClient,'>');
       console.log('onMqttJwtChannelOpened_::this.evidences_=<',this.evidences_,'>');
       console.log('GravitonJWT::reqMqttAuthOfJwt_:this.mass_=<',this.mass_,'>');
@@ -132,19 +132,19 @@ class GravitonJWT {
       evidences:this.evidences_
     }
     const signedJwtReq = this.mass_.sign(jwtReq);
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('onMqttJwtChannelOpened_::signedJwtReq=<',signedJwtReq,'>');
     }
     wsClient.send(JSON.stringify(signedJwtReq));
   }
   async onMqttJwtReply_(jwt,payload,origData) {
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('onMqttJwtReply_::jwt=<',jwt,'>');
       console.log('onMqttJwtReply_::payload=<',payload,'>');
     }
     if(payload.keyid) {
       const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${payload.keyid}`;
-      if(GravitonJWT.debug) {
+      if(GravitonJWT.trace) {
         console.log('onMqttJwtReply_::jwtLSKey=<',jwtLSKey,'>');
       }
       await GravitonJWT.store_.put(jwtLSKey,origData);
