@@ -130,10 +130,12 @@ class ChainOfEvidence {
       createIfMissing: true,
       valueEncoding: 'json',
     };
+    /*
     const rmOutput = execSync('rm -rf maap_evidence_chain/LOCK');
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::constructor:rmOutput=<',rmOutput.toString('utf-8'),'>');
     }
+    */
     try {
       this.chainStore_ = new Level('maap_evidence_chain', config);
     } catch(err) {
@@ -174,7 +176,7 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::createSeed:self.topEvidence_=<',self.topEvidence_.coc_,'>');
       }
       self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      localStorage.setItem(constDIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
+      localStorage.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
       if(typeof cb === 'function') {
         cb();
       }
@@ -327,8 +329,8 @@ class ChainOfEvidence {
     });
     this.graviton_.onMQTTMsg = (topic,jMsg) => {
       if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::createConnection_:topic=<',topic,'>');
-        console.log('ChainOfEvidence::createConnection_:jMsg=<',jMsg,'>');
+        //console.log('ChainOfEvidence::onMQTTMsg:topic=<',topic,'>');
+        //console.log('ChainOfEvidence::onMQTTMsg:jMsg=<',jMsg,'>');
       }      
       self.onMQTTMsg_(topic,jMsg);
     }
@@ -395,7 +397,7 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::pull2RootInternl_:chainPath=<',chainPath,'>');
       }
       const self = this;
-      this.chainStore_.getItem(chainPath,(err,value)=>{
+      this.chainStore_.get(chainPath,(err,value)=>{
         if(ChainOfEvidence.debug) {
           console.log('ChainOfEvidence::pull2RootInternl_:err=<',err,'>');
           console.log('ChainOfEvidence::pull2RootInternl_:value=<',value,'>');
@@ -422,12 +424,13 @@ class ChainOfEvidence {
     }
   }  
   
-  onJoinReplyInternal_(jMsg) {
+  async onJoinReplyInternal_(jMsg) {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg=<',jMsg,'>');
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',jMsg.top,'>');
+      console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',JSON.stringify(jMsg.top,undefined,2),'>');
     }
-    localStorage.setItem(constDIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top));
+    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top))
   }
 }
 

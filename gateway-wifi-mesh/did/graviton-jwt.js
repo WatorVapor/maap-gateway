@@ -8,6 +8,7 @@ const iConstOneHourInMs  = 1000 * 3600;
 class GravitonJWT {
   static trace = false;
   static debug = true;
+  
   static store_ = false;
   constructor(evidences,mass,resolve,cb) {
     if(GravitonJWT.trace) {
@@ -28,32 +29,32 @@ class GravitonJWT {
   }
 
   async checkLocalStorageOfMqttJwt_() {
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:this.mass_=<',this.mass_,'>');
     }
     const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.mass_.address_}`;
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwtLSKey=<',jwtLSKey,'>');
     }
     await GravitonJWT.store_.open();
-    if(GravitonJWT.debug) {
+    if(GravitonJWT.trace) {
       console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:GravitonJWT.store_.status=<',GravitonJWT.store_.status,'>');
     }
     try {
       const jwtStr = await GravitonJWT.store_.get(jwtLSKey);
       const jwt = JSON.parse(jwtStr);
-      if(GravitonJWT.debug) {
+      if(GravitonJWT.trace) {
         console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwt=<',jwt,'>');
       }
       if(jwt.payload && jwt.payload.exp ) {
         const jwtExpDate = new Date();
         const timeInMs = parseInt(jwt.payload.exp) *1000;
         jwtExpDate.setTime(timeInMs);
-        if(GravitonJWT.debug) {
+        if(GravitonJWT.trace) {
           console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwtExpDate=<',jwtExpDate,'>');
         }
         const exp_remain_ms = jwtExpDate - new Date();
-        if(GravitonJWT.debug) {
+        if(GravitonJWT.trace) {
           console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:exp_remain_ms=<',exp_remain_ms,'>');
         }
         if(exp_remain_ms > iConstOneHourInMs) {

@@ -14,6 +14,7 @@ class Graviton {
     this.evidences_ = evidences;
     this.mqttJwt_ = resolve;
     this.cb_ = cb;
+    this.ready_ = false;
     this.mass_ = mass;
     const self = this;
     this.jwtReq_ = new GravitonJWT(this.evidences_,this.mass_,this.mqttJwt_,(goodJwt)=>{
@@ -59,7 +60,8 @@ class Graviton {
     const self = this;
     this.mqttClient_.on('connect', () => {
       console.log('Graviton::createMqttConnection_ connect self.mqttClient_.connected:=<', self.mqttClient_.connected, '>');
-      if(typeof self.cb_ === 'function') {
+      if(typeof self.cb_ === 'function' && self.ready_ === false) {
+        self.ready_ = true;
         self.cb_(true);
       }
     });
