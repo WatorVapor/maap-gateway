@@ -79,6 +79,9 @@ class Graviton {
         topics.push(topic);
       }
     }
+    if(Graviton.debug) {
+      console.log('Graviton::createMqttConnection_:topics=<',topics,'>');
+    }
     this.mqttClient_.subscribe(topics,{qos:1,nl:true},(err, granted)=>{
       if(err) {
         console.error('Graviton::createMqttConnection_ subscribe err:=<', err, '>');

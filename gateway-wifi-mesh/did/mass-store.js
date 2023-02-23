@@ -161,7 +161,7 @@ class MassStore {
       if(MassStore.debug) {
         console.log('MassStore::createStore_:rmOutput=<',rmOutput.toString('utf-8'),'>');
       }
-      MassStore.msdb_ = new Level('maap_mass_store', { valueEncoding: 'json' });
+      MassStore.msdb_ = new Level('.maap_store_mass', { valueEncoding: 'json' });
       if(MassStore.trace) {
         console.log('MassStore::createStore_::MassStore.msdb_=<',MassStore.msdb_,'>');
       }

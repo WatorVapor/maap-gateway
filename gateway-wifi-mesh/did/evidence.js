@@ -137,7 +137,7 @@ class ChainOfEvidence {
     }
     */
     try {
-      this.chainStore_ = new Level('maap_evidence_chain', config);
+      this.chainStore_ = new Level('.maap_store_evidence_chain', config);
     } catch(err) {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::constructor:err=<',err,'>');

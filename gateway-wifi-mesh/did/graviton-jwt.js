@@ -23,7 +23,7 @@ class GravitonJWT {
       valueEncoding: 'json',
     };
     if(!GravitonJWT.store_) {
-      GravitonJWT.store_ = new Level('maap_graviton_store', config);
+      GravitonJWT.store_ = new Level('.maap_store_graviton', config);
     }
     this.checkLocalStorageOfMqttJwt_();
   }

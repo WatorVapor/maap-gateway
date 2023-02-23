@@ -120,7 +120,7 @@ class DIDLinkedDocument {
   }
   document() {
     if(DIDLinkedDocument.debug) {
-      console.log('DIDLinkedDocument::document:this.didDoc_=<',this.didDoc_,'>');
+      console.log('DIDLinkedDocument::document:this.didDoc_=<',JSON.stringify(this.didDoc_,undefined,2),'>');
     }
     return this.didDoc_;
   }
