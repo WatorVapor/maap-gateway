@@ -15,9 +15,7 @@ class MassStore {
   static debug2 = true;
   static store_prefix = 'eddsa';
   static msdb_ = false;
-  constructor(keyAddress,readycb) {
-    this.readyCB_ = readycb;
-    this.createStore_();
+  constructor(keyAddress) {
     if(keyAddress) {
       this.secretKeyPath_ = `${MassStore.store_prefix}/${keyAddress}/secretKey`;
       this.publicKeyPath_ = `${MassStore.store_prefix}/${keyAddress}/publicKey`;
@@ -27,13 +25,21 @@ class MassStore {
         console.log('MassStore::constructor::this.publicKeyPath_=<',this.publicKeyPath_,'>');
         console.log('MassStore::constructor::this.addressPath_=<',this.addressPath_,'>');
       }
-      setTimeout(()=>{
-        this.loadMassStoreKey_();
-      },0);
-    } else {
-      this.createMassStoreKey_();
     }
   }
+  async load() {
+    await this.createStore_();
+    if(!this.addressPath_) {
+      await this.createMassStoreKey_();
+    }
+    const isGood = await this.loadMassStoreKey_();
+    if(MassStore.debug2) {
+      console.log('MassStore::load::isGood=<',isGood,'>');
+    }
+    return isGood;
+  }
+  
+  
   sign(msgOrig) {
     msgOrig.ts = new Date().toISOString();
     return this.signWithoutTS(msgOrig);
@@ -112,23 +118,23 @@ class MassStore {
     }
     return false;
   }
-  load(secretKey) {
+  loadSecret(secretKey) {
     if(MassStore.debug) {
-      console.log('MassStore::load::secretKey=<',secretKey,'>');
+      console.log('MassStore::loadSecret::secretKey=<',secretKey,'>');
     }
     const secretBin = nacl.util.decodeBase64(secretKey);
     if(MassStore.debug) {
-      console.log('MassStore::load::secretBin=<',secretBin,'>');
+      console.log('MassStore::loadSecret::secretBin=<',secretBin,'>');
     }
     const keyPair = nacl.sign.keyPair.fromSecretKey(secretBin);
     if(MassStore.debug) {
-      console.log('MassStore::load::keyPair=<',keyPair,'>');
+      console.log('MassStore::loadSecret::keyPair=<',keyPair,'>');
     }
     this.secretKey_ = keyPair.secretKey;
     this.publicKey_ = keyPair.publicKey;
     const b64Pub = nacl.util.encodeBase64(keyPair.publicKey);
     if(MassStore.debug) {
-      console.log('MassStore::load:b64Pub=<',b64Pub,'>');
+      console.log('MassStore::loadSecret:b64Pub=<',b64Pub,'>');
     }
     this.publicKeyB64_ = b64Pub;
     const address = this.calcAddress_(b64Pub);
@@ -157,10 +163,6 @@ class MassStore {
   }
   createStore_() {
     if(MassStore.msdb_ === false) {
-      const rmOutput = execSync('rm -rf maap_mass_store/LOCK');
-      if(MassStore.debug) {
-        console.log('MassStore::createStore_:rmOutput=<',rmOutput.toString('utf-8'),'>');
-      }
       MassStore.msdb_ = new Level('.maap_store_mass', { valueEncoding: 'json' });
       if(MassStore.trace) {
         console.log('MassStore::createStore_::MassStore.msdb_=<',MassStore.msdb_,'>');
@@ -169,7 +171,7 @@ class MassStore {
   }
   
   async createMassStoreKey_() {
-    this.mineMassStoreKey_();
+    await this.mineMassStoreKey_();
   }
  
   async mineMassStoreKey_() {
@@ -185,7 +187,6 @@ class MassStore {
       }
       if(address.startsWith('mp')) {
         await this.save2Storage_(keyPair);
-        await this.loadMassStoreKey_();
         break;
       } else {
       }
@@ -238,18 +239,20 @@ class MassStore {
         console.log('MassStore::loadMassStoreKey_:address=<',address,'>');
       }
       if(!address) {
-        if(typeof this.readyCB_ === 'function') {
-          this.readyCB_(false);
-        }
-        return;
+        return false;
       }
       this.address_ = address;
+      
       const PriKey = await MassStore.msdb_.get(this.secretKeyPath_);
       if(MassStore.debug) {
         console.log('MassStore::loadMassStoreKey_:MassStore.msdb_=<',MassStore.msdb_,'>');
         console.log('MassStore::loadMassStoreKey_:this.secretKeyPath_=<',this.secretKeyPath_,'>');
         console.log('MassStore::loadMassStoreKey_:PriKey=<',PriKey,'>');
       }
+      if(!PriKey) {
+        return false;
+      }
+
       this.priKeyB64_ = PriKey;
       this.priKey_ = nacl.util.decodeBase64(PriKey);
       if(MassStore.debug) {
@@ -261,26 +264,24 @@ class MassStore {
       }    
       this.secretKey_ = keyPair.secretKey;
       this.publicKey_ = keyPair.publicKey;
+      
       const pubKey = await MassStore.msdb_.get(this.publicKeyPath_);
       if(MassStore.debug) {
         console.log('MassStore::loadMassStoreKey_:pubKey=<',pubKey,'>');
+      }
+      if(!pubKey) {
+        return false;
       }
       this.pubKeyB64_ = pubKey;
       this.publicKeyB64_ = pubKey;
       this.pubKey_ = nacl.util.decodeBase64(pubKey);
     } catch(err) {
       console.error('MassStore::loadMassStoreKey_:err=<',err,'>');
-      if(typeof this.readyCB_ === 'function') {
-        this.readyCB_(false);
-      }
       return false;
     }
     if(MassStore.trace) {
       console.log('MassStore::loadMassStoreKey_:this.readyCB_=<',this.readyCB_,'>');
     }    
-    if(typeof this.readyCB_ === 'function') {
-      this.readyCB_(true);
-    }
     return true;
   }
   calcAddress_(b64Pub) {

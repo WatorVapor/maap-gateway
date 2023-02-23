@@ -13,7 +13,7 @@ class Evidence {
   static debug = true;
   static did_method = 'maap';
   static did_resolve = 'wss://wator.xyz:8084/jwt/did';
-  constructor(docJson,cb,srcEvidence) {
+  constructor(docJson,srcEvidence) {
     this.coc_ = {};
     if(Evidence.debug) {
       console.log('Evidence::constructor:docJson=<',docJson,'>');
@@ -23,12 +23,18 @@ class Evidence {
     }
     if(docJson) {
       if(docJson._maap_guest) {
-        this.joinDid(docJson,cb);
+        this.joinDid(docJson);
       } else {
-        this.createFromJson_(docJson,cb);
+        this.createFromJson_(docJson);
       }
     } else {
-      this.createSeed_(cb);
+      this.createSeed_();
+    }
+  }
+  async load() {
+    await this.didDoc.load();
+    if(Evidence.debug) {
+      console.log('Evidence::load:this.didDoc=<',this.didDoc,'>');
     }
   }
   address(){
@@ -38,6 +44,9 @@ class Evidence {
     return `did:${Evidence.did_method}:`;
   }
   document() {
+    if(Evidence.debug) {
+      console.log('Evidence::document:this.didDoc=<',this.didDoc,'>');
+    }
     if(this.didDoc) {
       return this.didDoc.document();
     }
@@ -75,13 +84,13 @@ class Evidence {
     this.coc_.stage = 'stable';
     this.didDoc = new DIDSeedDocument(cb);
   }
-  joinDid(docJson,cb) {
+  joinDid(docJson) {
     if(Evidence.debug) {
       console.log('Evidence::joinDid:docJson=<',docJson,'>');
     }
     this.coc_.parent = null;
     this.coc_.stage = 'guest';
-    this.didDoc = new DIDGuestDocument(docJson.id,cb);
+    this.didDoc = new DIDGuestDocument(docJson.id);
   }
 
   calcBlockAddress_() {
@@ -130,12 +139,6 @@ class ChainOfEvidence {
       createIfMissing: true,
       valueEncoding: 'json',
     };
-    /*
-    const rmOutput = execSync('rm -rf maap_evidence_chain/LOCK');
-    if(ChainOfEvidence.debug) {
-      console.log('ChainOfEvidence::constructor:rmOutput=<',rmOutput.toString('utf-8'),'>');
-    }
-    */
     try {
       this.chainStore_ = new Level('.maap_store_evidence_chain', config);
     } catch(err) {
@@ -143,7 +146,9 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::constructor:err=<',err,'>');
       }
     }
-    this.loadEvidence_();
+  }
+  async load() {
+    await this.loadEvidence_();
   }
   destroy() {
     if(ChainOfEvidence.debug) {
@@ -169,34 +174,34 @@ class ChainOfEvidence {
     }
     return {};
   }
-  createSeed(cb) {
-    const self = this;
-    this.topEvidence_ = new Evidence(null,()=> {
-      if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::createSeed:self.topEvidence_=<',self.topEvidence_.coc_,'>');
-      }
-      self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      localStorage.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
-      if(typeof cb === 'function') {
-        cb();
-      }
-      this.saveEvidencesToChain_(self.topEvidence_);
-    });
+  async createSeed() {
+    this.topEvidence_ = new Evidence(null);
+    await this.topEvidence_.load();
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::createSeed:this.topEvidence_=<',this.topEvidence_.coc_,'>');
+    }
+    this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
+    localStorage.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
+    this.saveEvidencesToChain_(this.topEvidence_);
   }
-  joinDid(id,cb) {
+  
+  async joinDid(id) {
     const guestEviJson = {id:id,_maap_guest:true};
-    const self = this;
-    this.topEvidence_ = new Evidence(guestEviJson,async ()=> {
-      if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::joinDid:self.topEvidence_=<',self.topEvidence_.coc_,'>');
-      }
-      self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-      await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(self.topEvidence_.coc_));
-      if(typeof cb === 'function') {
-        cb();
-      }
-    });
+    this.topEvidence_ = new Evidence(guestEviJson);
+    await this.topEvidence_.load();
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::joinDid:this.topEvidence_=<',this.topEvidence_,'>');
+    }
+    this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::joinDid:this.topEvidence_.coc_=<',this.topEvidence_.coc_,'>');
+    }
+
+    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
   }
+  
+  
+  
   isMember() {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::isMember:this.topEvidence_=<',this.topEvidence_,'>');
@@ -283,32 +288,26 @@ class ChainOfEvidence {
     }
     try {
       const topEviStr = await this.chainStore_.get(strConst.DIDTeamAuthEvidenceTop);
-      if(ChainOfEvidence.trace) {
+      if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::loadEvidence_:topEviStr=<',topEviStr,'>');
       }
       if(topEviStr) {
         const topEviJson = JSON.parse(topEviStr);
-        if(ChainOfEvidence.trace) {
+        if(ChainOfEvidence.debug) {
           console.log('ChainOfEvidence::loadEvidence_:topEviJson=<',topEviJson,'>');
         }
         if(topEviJson) {
-          const self = this;
-          this.topEvidence_ = new Evidence(topEviJson,()=>{
-            self.topEvidence_.coc_.didDoc = self.topEvidence_.document();
-            self.pull2Root_(self.topEvidence_.coc_,(evidences)=>{
-              if(ChainOfEvidence.debug) {
-                console.log('ChainOfEvidence::loadEvidence_:evidences=<',evidences,'>');
-              }            
-            });
-            self.createConnection_(self.topEvidence_);
-          });
+          this.topEvidence_ = new Evidence(topEviJson);
+          await this.topEvidence_.load();
+        
+          this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
+          await this.pull2Root_(this.topEvidence_.coc_);
+          this.createConnection_(this.topEvidence_);
         }
       } else {
       }
     } catch (err) {
-      if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::loadEvidence_:err=<',err,'>');
-      }      
+      console.log('ChainOfEvidence::loadEvidence_:err=<',err,'>');
     }
   }
   createConnection_(topEvid) {
@@ -380,14 +379,14 @@ class ChainOfEvidence {
     }
     await this.chainStore_.put(chainPath,JSON.stringify(evidence.coc_));
   }
-  pull2Root_(topBlock,cb) {
+  async pull2Root_(topBlock,cb) {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::pull2Root_:topBlock=<',topBlock,'>');
     }
     this.allBlocks_ = [topBlock];
     this.pull2RootInternl_(topBlock,cb);
   }
-  pull2RootInternl_(currBlock,cb) {
+  async pull2RootInternl_(currBlock,cb) {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::pull2RootInternl_:currBlock=<',currBlock,'>');
     }
@@ -396,6 +395,11 @@ class ChainOfEvidence {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::pull2RootInternl_:chainPath=<',chainPath,'>');
       }
+      const value = await this.chainStore_.get(chainPath);
+      if(ChainOfEvidence.debug) {
+        console.log('ChainOfEvidence::pull2RootInternl_:value=<',value,'>');
+      }
+      /*
       const self = this;
       this.chainStore_.get(chainPath,(err,value)=>{
         if(ChainOfEvidence.debug) {
@@ -421,6 +425,7 @@ class ChainOfEvidence {
           }
         }
       });
+      */
     }
   }  
   

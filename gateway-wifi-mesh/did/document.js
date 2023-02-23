@@ -12,24 +12,16 @@ class DIDDocument {
 
 class DIDSeedDocument {
   static debug = true;
-  constructor(cb) {
+  constructor() {
     this.ready1_ = false;
     this.ready2_ = false;
     const self = this;
-    const massAuth = new MassStore(null,(good)=>{
-      if(good === true) {
-        self.massAuth_ = massAuth;
-      }
-      self.ready1_ = true;
-      self.tryCallReady_(cb);
-    });
-    const massRecovery = new MassStore(null,(good) => {
-      if(good === true) {
-        self.massRecovery_ = massRecovery;
-      }
-      self.ready2_ = true;
-      self.tryCallReady_(cb);
-    });
+    const massAuth = new MassStore(null);
+    const massRecovery = new MassStore(null);
+  }
+  async load() {
+    await this.massAuth.load();
+    await this.massRecovery.load();
   }
   address() {
     return `did:${DIDDocument.did_method}:${this.massAuth_.address()}`;
@@ -92,16 +84,6 @@ class DIDSeedDocument {
   appendDocument(keyid) {
     return didDoc;
   }
-  tryCallReady_(cb) {
-    if(this.ready1_ && this.ready2_) {
-      if(self.massAuth_) {
-        this.document();
-        cb(true);
-      } else {
-        cb(false);        
-      }
-    }
-  }
 }
 
 class DIDLinkedDocument {
@@ -113,7 +95,9 @@ class DIDLinkedDocument {
     this.cb_ = cb;
     this.address_ = evidence.id;
     this.didDoc_ = evidence;
-    this.loadAuthMass_();
+  }
+  async load() {
+    await this.loadAuthMass_();
   }
   address() {
     return this.address_;
@@ -169,11 +153,10 @@ class DIDLinkedDocument {
     newDidDoc.proof = proofs;
     return newDidDoc;
   }
-  loadAuthMass_() {
+  async loadAuthMass_() {
     if(DIDLinkedDocument.debug) {
       console.log('DIDLinkedDocument::loadAuthMass_:this.didDoc_=<',this.didDoc_,'>');
     }
-    const self = this;
     for(const authentication of this.didDoc_.authentication) {
       if(DIDLinkedDocument.debug) {
         console.log('DIDLinkedDocument::loadAuthMass_:authentication=<',authentication,'>');
@@ -185,17 +168,14 @@ class DIDLinkedDocument {
           console.log('DIDLinkedDocument::loadAuthMass_:keyId=<',keyId,'>');
         }
         if(keyId && !this.massAuth_) {
-          const mass = new MassStore(keyId,(good)=>{
-            if(DIDLinkedDocument.debug) {
-              console.log('DIDLinkedDocument::loadAuthMass_:good=<',good,'>');
-            }
-            if(good) {
-              self.massAuth_ = mass;
-              if(typeof self.cb_ === 'function') {
-                self.cb_();
-              }
-            }
-          });
+          const mass = new MassStore(keyId);
+          const isGood = await mass.load();
+          if(DIDLinkedDocument.debug) {
+            console.log('DIDLinkedDocument::loadAuthMass_:isGood=<',isGood,'>');
+          }
+          if(isGood) {
+            this.massAuth_ = mass;            
+          }
         }
       }
     }
@@ -205,13 +185,12 @@ class DIDLinkedDocument {
 
 class DIDGuestDocument {
   static debug = true;
-  constructor(address,cb) {
+  constructor(address) {
     this.address_ = address;
-    const self = this;
-    this.massAuth_ = new MassStore(null,() => {
-      self.document();
-      cb();
-    });
+    this.massAuth_ = new MassStore(null);
+  }
+  async load() {
+    await this.massAuth_.load();
   }
   address() {
     return this.address_;
