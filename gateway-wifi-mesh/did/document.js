@@ -157,6 +157,9 @@ class DIDLinkedDocument {
     if(DIDLinkedDocument.debug) {
       console.log('DIDLinkedDocument::loadAuthMass_:this.didDoc_=<',this.didDoc_,'>');
     }
+    if(!this.didDoc_.authentication) {
+      return;
+    }
     for(const authentication of this.didDoc_.authentication) {
       if(DIDLinkedDocument.debug) {
         console.log('DIDLinkedDocument::loadAuthMass_:authentication=<',authentication,'>');

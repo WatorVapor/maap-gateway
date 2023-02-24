@@ -6,10 +6,11 @@ const strConst = require('./const.js');
 const iConstOneHourInMs  = 1000 * 3600;
 
 class GravitonJWT {
-  static trace = false;
+  static trace = true;
   static debug = true;
   
   static store_ = false;
+  
   constructor(evidences,mass,resolve,cb) {
     if(GravitonJWT.trace) {
       console.log('GravitonJWT::constructor:evidences=<',evidences,'>');

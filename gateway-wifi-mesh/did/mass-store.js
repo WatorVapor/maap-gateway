@@ -13,8 +13,10 @@ class MassStore {
   static trace = false;
   static debug = false;
   static debug2 = true;
+  
   static store_prefix = 'eddsa';
   static msdb_ = false;
+  
   constructor(keyAddress) {
     if(keyAddress) {
       this.secretKeyPath_ = `${MassStore.store_prefix}/${keyAddress}/secretKey`;
@@ -182,10 +184,13 @@ class MassStore {
       }
       const b64Pub = nacl.util.encodeBase64(keyPair.publicKey);
       const address = this.calcAddress_(b64Pub);
-      if(MassStore.debug2) {
+      if(MassStore.trace) {
         console.log('MassStore::mineMassStoreKey_:address=<',address,'>');
       }
       if(address.startsWith('mp')) {
+        if(MassStore.debug2) {
+          console.log('MassStore::mineMassStoreKey_:address=<',address,'>');
+        }
         await this.save2Storage_(keyPair);
         break;
       } else {

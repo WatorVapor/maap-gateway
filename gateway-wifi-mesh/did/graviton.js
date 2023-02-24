@@ -7,7 +7,7 @@ const iConstOneHourInMs  = 1000 * 3600;
 class Graviton {
   static trace = false;
   static debug = true;
-  constructor(evidences,mass,resolve,cb) {
+  constructor(evidences,mass,resolve) {
     if(Graviton.trace) {
       console.log('Graviton::constructor:evidences=<',evidences,'>');
     }
@@ -23,6 +23,11 @@ class Graviton {
       }
       self.createMqttConnection_(goodJwt.jwt,goodJwt.payload);
     });
+  }
+  async load() {
+    if(Graviton.debug) {
+      console.log('Graviton::load:goodJwt=<',goodJwt,'>');
+    }    
   }
   publish(topic,msg) {
     if(Graviton.debug) {

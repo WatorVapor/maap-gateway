@@ -6,20 +6,20 @@ if(process.argv.length < 3) {
   process.exit(0);
 }
 const address = process.argv[2];
-console.log(':::: address:=<',address,'>');
+console.log('::: address:=<',address,'>');
 const coc = new ChainOfEvidence();
 
 const waitLoad = async () => {
   await coc.load();
-  console.log(':::: coc:=<',coc,'>');
-  coc.joinDid(address);
-  console.log(':::: coc:=<',coc,'>');
+  console.log('::waitLoad: coc.topEvidence_:=<',coc.topEvidence_,'>');
+  await coc.joinDid(address);
+  console.log('::waitLoad: coc.topEvidence_:=<',coc.topEvidence_,'>');
   
   // reload
   await coc.load();
 
   const password = generateRandomString(4);
-  console.log('::password: password:=<',password,'>');
+  console.log('::waitLoad:password: password:=<',password,'>');
   coc.reqJoinTeam(password);
 }
 

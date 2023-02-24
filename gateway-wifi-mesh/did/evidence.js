@@ -302,7 +302,7 @@ class ChainOfEvidence {
         
           this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
           await this.pull2Root_(this.topEvidence_.coc_);
-          this.createConnection_(this.topEvidence_);
+          await this.createConnection_(this.topEvidence_);
         }
       } else {
       }
@@ -310,13 +310,16 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::loadEvidence_:err=<',err,'>');
     }
   }
-  createConnection_(topEvid) {
+  async createConnection_(topEvid) {
     if(ChainOfEvidence.trace) {
       console.log('ChainOfEvidence::createConnection_:topEvid=<',topEvid,'>');
     }
     const evidences = [this.topEvidence_.document()];
     const self = this;
     const mass = this.topEvidence_.mass();
+    this.graviton_ = new Graviton(evidences,mass,Evidence.did_resolve);
+    await this.graviton_.load();
+    /*
     this.graviton_ = new Graviton(evidences,mass,Evidence.did_resolve,(good)=>{
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::createConnection_:good=<',good,'>');
@@ -326,6 +329,7 @@ class ChainOfEvidence {
         self.cb_(true);
       }
     });
+    */
     this.graviton_.onMQTTMsg = (topic,jMsg) => {
       if(ChainOfEvidence.debug) {
         //console.log('ChainOfEvidence::onMQTTMsg:topic=<',topic,'>');
