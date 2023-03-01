@@ -88,11 +88,10 @@ class DIDSeedDocument {
 
 class DIDLinkedDocument {
   static debug = true;
-  constructor(evidence,cb) {
+  constructor(evidence) {
     if(DIDLinkedDocument.debug) {
       console.log('DIDLinkedDocument::constructor:evidence=<',evidence,'>');
     }
-    this.cb_ = cb;
     this.address_ = evidence.id;
     this.didDoc_ = evidence;
   }

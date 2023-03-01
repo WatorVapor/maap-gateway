@@ -13,7 +13,6 @@ class Graviton {
     }
     this.evidences_ = evidences;
     this.mqttJwt_ = resolve;
-    this.cb_ = cb;
     this.ready_ = false;
     this.mass_ = mass;
     const self = this;
@@ -23,11 +22,12 @@ class Graviton {
       }
       self.createMqttConnection_(goodJwt.jwt,goodJwt.payload);
     });
+    this.cachedMsg_ = [];
   }
   async load() {
     if(Graviton.debug) {
-      console.log('Graviton::load:goodJwt=<',goodJwt,'>');
-    }    
+      console.log('Graviton::load:this.ready_=<',this.ready_,'>');
+    }
   }
   publish(topic,msg) {
     if(Graviton.debug) {
@@ -37,7 +37,30 @@ class Graviton {
     if(Graviton.debug) {
       console.log('Graviton::publish:msgSigned=<',msgSigned,'>');
     }
-    this.mqttClient_.publish(topic,JSON.stringify(msgSigned));
+    if(this.mqttClient_ && this.mqttClient_.connected) {
+      this.mqttClient_.publish(topic,JSON.stringify(msgSigned));
+    } else {
+      //console.error('Graviton::publish:this.mqttClient_=<',this.mqttClient_,'>');
+      const cachedMsg = {
+        topic:topic,
+        msgSigned:msgSigned
+      };
+      this.cachedMsg_.push(cachedMsg);
+    }
+  }
+  
+  outputCached_ = () => {
+    if(this.mqttClient_ && this.mqttClient_.connected) {
+      for(const cachedMsg of this.cachedMsg_) {
+        this.mqttClient_.publish(cachedMsg.topic,JSON.stringify(cachedMsg.msgSigned));
+      }
+      this.cachedMsg_ = [];
+    } else {
+      const self = this;
+      setTimeout(()=>{
+        self.outputCached_();
+      },1000);
+    }
   }
   
   createMqttConnection_(jwt,payload) {
@@ -65,10 +88,8 @@ class Graviton {
     const self = this;
     this.mqttClient_.on('connect', () => {
       console.log('Graviton::createMqttConnection_ connect self.mqttClient_.connected:=<', self.mqttClient_.connected, '>');
-      if(typeof self.cb_ === 'function' && self.ready_ === false) {
-        self.ready_ = true;
-        self.cb_(true);
-      }
+      self.ready_ = true;
+      self.outputCached_();
     });
     this.mqttClient_.on('message', (channel, message) => {
       self.onMqttMessage_(channel, message);

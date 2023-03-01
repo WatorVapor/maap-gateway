@@ -319,17 +319,6 @@ class ChainOfEvidence {
     const mass = this.topEvidence_.mass();
     this.graviton_ = new Graviton(evidences,mass,Evidence.did_resolve);
     await this.graviton_.load();
-    /*
-    this.graviton_ = new Graviton(evidences,mass,Evidence.did_resolve,(good)=>{
-      if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::createConnection_:good=<',good,'>');
-      }
-      self.graviton_.ready = good;
-      if(typeof self.cb_ === 'function') {
-        self.cb_(true);
-      }
-    });
-    */
     this.graviton_.onMQTTMsg = (topic,jMsg) => {
       if(ChainOfEvidence.debug) {
         //console.log('ChainOfEvidence::onMQTTMsg:topic=<',topic,'>');
@@ -388,7 +377,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::pull2Root_:topBlock=<',topBlock,'>');
     }
     this.allBlocks_ = [topBlock];
-    this.pull2RootInternl_(topBlock,cb);
+    await this.pull2RootInternl_(topBlock,cb);
   }
   async pull2RootInternl_(currBlock,cb) {
     if(ChainOfEvidence.debug) {
@@ -399,37 +388,26 @@ class ChainOfEvidence {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::pull2RootInternl_:chainPath=<',chainPath,'>');
       }
-      const value = await this.chainStore_.get(chainPath);
-      if(ChainOfEvidence.debug) {
-        console.log('ChainOfEvidence::pull2RootInternl_:value=<',value,'>');
-      }
-      /*
-      const self = this;
-      this.chainStore_.get(chainPath,(err,value)=>{
+      try {
+        const value = await this.chainStore_.get(chainPath);
         if(ChainOfEvidence.debug) {
-          console.log('ChainOfEvidence::pull2RootInternl_:err=<',err,'>');
           console.log('ChainOfEvidence::pull2RootInternl_:value=<',value,'>');
         }
-        if(err) {
-          cb(self.allBlocks_);
-        } else {
-          const valueJson = JSON.parse(value);
-          if(ChainOfEvidence.debug) {
-            console.log('ChainOfEvidence::pull2RootInternl_:valueJson=<',valueJson,'>');
-          }
-          if(valueJson) {
-            self.allBlocks_.push(valueJson);
-            if(valueJson.parent) {
-              self.pull2RootInternl_(valueJson,cb);
-            } else {
-              cb(self.allBlocks_);
-            }
-          } else {
-            cb(self.allBlocks_);            
-          }
+        const valueJson = JSON.parse(value);
+        if(ChainOfEvidence.debug) {
+          console.log('ChainOfEvidence::pull2RootInternl_:valueJson=<',valueJson,'>');
         }
-      });
-      */
+        if(valueJson) {
+          this.allBlocks_.push(valueJson);
+          if(valueJson.parent) {
+            await this.pull2RootInternl_(valueJson);
+          } else {
+          }
+        } else {
+        }
+      } catch(err) {
+        console.log('ChainOfEvidence::pull2RootInternl_:err=<',err,'>');        
+      }
     }
   }  
   

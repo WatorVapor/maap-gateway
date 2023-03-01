@@ -149,7 +149,11 @@ class GravitonJWT {
       if(GravitonJWT.trace) {
         console.log('onMqttJwtReply_::jwtLSKey=<',jwtLSKey,'>');
       }
-      await GravitonJWT.store_.put(jwtLSKey,origData);
+      try {
+        await GravitonJWT.store_.put(jwtLSKey,origData);
+      } catch(err) {
+        console.error('GravitonJWT::onMqttJwtReply_:err=<',err,'>');
+      }
       this.checkLocalStorageOfMqttJwt_();
     }
   }
