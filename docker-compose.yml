@@ -1,0 +1,22 @@
+version: '3'
+services:
+  redis-relay:
+    image: redis:7
+    volumes:
+      - ./gateway-relay-redis/7.0/redis.conf:/usr/local/etc/redis/redis.conf
+      - /dev/shm/:/dev/shm/
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - none
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 8M
+networks:
+  none:
+    external:
+      name: "none"
