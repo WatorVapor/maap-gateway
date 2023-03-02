@@ -6,7 +6,7 @@ const strConst = require('./const.js');
 const iConstOneHourInMs  = 1000 * 3600;
 
 class GravitonJWT {
-  static trace = true;
+  static trace = false;
   static debug = true;
   
   static store_ = false;
@@ -27,6 +27,15 @@ class GravitonJWT {
       GravitonJWT.store_ = new Level('.maap_store_graviton', config);
     }
     this.checkLocalStorageOfMqttJwt_();
+  }
+  async clear() {
+    const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.mass_.address_}`;
+    await GravitonJWT.store_.open();
+    try {
+      await GravitonJWT.store_.del(jwtLSKey)
+    } catch(err) {
+      
+    }
   }
 
   async checkLocalStorageOfMqttJwt_() {

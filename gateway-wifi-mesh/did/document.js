@@ -1,6 +1,7 @@
 const MassStore = require('./mass-store.js').MassStore;
 
 class DIDDocument {
+  static trace = false;
   static debug = true;
   static did_method = 'maap';
   static did_context = 'https://www.wator.xyz/maap/';
@@ -11,6 +12,7 @@ class DIDDocument {
 }
 
 class DIDSeedDocument {
+  static trace = false;
   static debug = true;
   constructor() {
     this.ready1_ = false;
@@ -87,13 +89,15 @@ class DIDSeedDocument {
 }
 
 class DIDLinkedDocument {
+  static trace = false;
   static debug = true;
   constructor(evidence) {
-    if(DIDLinkedDocument.debug) {
+    if(DIDLinkedDocument.trace) {
       console.log('DIDLinkedDocument::constructor:evidence=<',evidence,'>');
     }
     this.address_ = evidence.id;
-    this.didDoc_ = evidence;
+    this.didDoc_ = JSON.parse(JSON.stringify(evidence));
+    this.didDocWork_ = JSON.parse(JSON.stringify(evidence));
   }
   async load() {
     await this.loadAuthMass_();
@@ -102,13 +106,13 @@ class DIDLinkedDocument {
     return this.address_;
   }
   document() {
-    if(DIDLinkedDocument.debug) {
+    if(DIDLinkedDocument.trace) {
       console.log('DIDLinkedDocument::document:this.didDoc_=<',JSON.stringify(this.didDoc_,undefined,2),'>');
     }
     return this.didDoc_;
   }
   appendDocument(keyid,keyB64) {
-    if(DIDLinkedDocument.debug) {
+    if(DIDLinkedDocument.trace) {
       console.log('DIDLinkedDocument::appendDocument:keyid=<',keyid,'>');
       console.log('DIDLinkedDocument::appendDocument:keyB64=<',keyB64,'>');
       console.log('DIDLinkedDocument::appendDocument:this.didDoc_=<',this.didDoc_,'>');
@@ -152,6 +156,45 @@ class DIDLinkedDocument {
     newDidDoc.proof = proofs;
     return newDidDoc;
   }
+  isComplete() {
+    if(DIDLinkedDocument.debug) {
+      console.log('DIDLinkedDocument::isComplete:this.didDocWork_=<',this.didDocWork_,'>');
+    }
+    const isGood = this.massAuth_.verifyDidDoc(this.didDocWork_);
+    if(DIDLinkedDocument.debug) {
+      console.log('DIDLinkedDocument::isComplete:isGood=<',isGood,'>');
+    }
+    if(isGood === false) {
+      console.log('DIDLinkedDocument::isComplete:isGood=<',isGood,'>');
+      return false;
+    }
+    for(const proof of this.didDocWork_.proof) {
+      const isMineProof = proof.creator.endsWith(`#{this.massAuth_}`);
+      if(isMineProof) {
+        return true;
+      }
+    }
+    return false;
+  }
+  completeProof(){
+    if(DIDLinkedDocument.debug) {
+      console.log('DIDLinkedDocument::completeProof:this.didDoc_=<',this.didDoc_,'>');
+    }
+    const didDoc = JSON.parse(JSON.stringify(this.didDoc_));
+    delete didDoc.proof;
+    const signedMsg = this.massAuth_.signWithoutTS(didDoc);
+    const proof = {
+      type:'ed25519',
+      creator:`${this.address()}#${this.massAuth_.address_}`,
+      signatureValue:signedMsg.auth.sign,
+    };
+    this.didDoc_.proof.push(proof);
+    if(DIDLinkedDocument.debug) {
+      console.log('DIDLinkedDocument::completeProof:this.didDoc_=<',this.didDoc_,'>');
+    }
+    return this.didDoc_;
+  }
+  
   async loadAuthMass_() {
     if(DIDLinkedDocument.debug) {
       console.log('DIDLinkedDocument::loadAuthMass_:this.didDoc_=<',this.didDoc_,'>');
@@ -186,6 +229,7 @@ class DIDLinkedDocument {
 
 
 class DIDGuestDocument {
+  static trace = false;
   static debug = true;
   constructor(address) {
     this.address_ = address;

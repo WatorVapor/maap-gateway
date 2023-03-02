@@ -6,8 +6,6 @@ services:
       - ./gateway-relay-redis/7.0/redis.conf:/usr/local/etc/redis/redis.conf
       - /dev/shm/:/dev/shm/
     command: redis-server /usr/local/etc/redis/redis.conf
-    networks:
-      - none
     deploy:
       resources:
         limits:
@@ -16,7 +14,3 @@ services:
         reservations:
           cpus: '0.1'
           memory: 8M
-networks:
-  none:
-    external:
-      name: "none"

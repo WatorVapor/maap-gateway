@@ -48,6 +48,9 @@ class Graviton {
       this.cachedMsg_.push(cachedMsg);
     }
   }
+  async clearJWT() {
+    await this.jwtReq_.clear();
+  }
   
   outputCached_ = () => {
     if(this.mqttClient_ && this.mqttClient_.connected) {

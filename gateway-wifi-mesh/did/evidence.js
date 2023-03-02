@@ -33,7 +33,7 @@ class Evidence {
   }
   async load() {
     await this.didDoc.load();
-    if(Evidence.debug) {
+    if(Evidence.trace) {
       console.log('Evidence::load:this.didDoc=<',this.didDoc,'>');
     }
   }
@@ -44,7 +44,7 @@ class Evidence {
     return `did:${Evidence.did_method}:`;
   }
   document() {
-    if(Evidence.debug) {
+    if(Evidence.trace) {
       console.log('Evidence::document:this.didDoc=<',this.didDoc,'>');
     }
     if(this.didDoc) {
@@ -60,7 +60,7 @@ class Evidence {
   }
   
   createFromJson_(docJson,cb) {
-    if(Evidence.debug) {
+    if(Evidence.trace) {
       console.log('Evidence::createFromJson_:docJson=<',docJson,'>');
     }
     this.coc_.parent = docJson.parent;
@@ -68,7 +68,7 @@ class Evidence {
     this.didDoc = new DIDLinkedDocument(docJson.didDoc,cb);
   }
   createFromParent_(newEvidence) {
-    if(Evidence.debug) {
+    if(Evidence.trace) {
       console.log('Evidence::createFromParent_:newEvidence=<',newEvidence,'>');
     }
     const evidence = new Evidence(null,null,this);
@@ -302,12 +302,32 @@ class ChainOfEvidence {
         
           this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
           await this.pull2Root_(this.topEvidence_.coc_);
+          this.verifyTopEvidence_();
           await this.createConnection_(this.topEvidence_);
         }
       } else {
       }
     } catch (err) {
       console.log('ChainOfEvidence::loadEvidence_:err=<',err,'>');
+    }
+  }
+  verifyTopEvidence_(){
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::verifyTopEvidence_:this.topEvidence_=<',this.topEvidence_,'>');
+    }
+    if(ChainOfEvidence.debug) {
+      const topCoc = this.topEvidence_.coc_;
+      console.log('ChainOfEvidence::verifyTopEvidence_:topCoc=<',topCoc,'>');
+    }
+    const isComplete = this.topEvidence_.didDoc.isComplete()
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::verifyTopEvidence_:isComplete=<',isComplete,'>');
+    }
+    if(!isComplete) {
+      const completeDoc = this.topEvidence_.didDoc.completeProof();
+      if(ChainOfEvidence.debug) {
+        console.log('ChainOfEvidence::verifyTopEvidence_:completeDoc=<',completeDoc,'>');
+      }
     }
   }
   async createConnection_(topEvid) {
@@ -417,7 +437,9 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',jMsg.top,'>');
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',JSON.stringify(jMsg.top,undefined,2),'>');
     }
-    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top))
+    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top));
+    await this.graviton_.clearJWT();
+    process.exit(0);
   }
 }
 

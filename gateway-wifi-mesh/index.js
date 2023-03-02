@@ -1,6 +1,10 @@
 const process = require('process');
 const evidence = require('./did/evidence.js')
 const ChainOfEvidence = evidence.ChainOfEvidence;
+const LOG = {
+  trace:false,
+  debug:true,
+}
 
 process.on('beforeExit', (code) => {
   coc.destroy();
@@ -11,7 +15,7 @@ process.on('exit', (code) => {
 });
 
 const coc = new ChainOfEvidence();
-console.log(':::: coc:=<',coc,'>');
+console.log(':::: coc.topEvidence_:=<',coc.topEvidence_,'>');
 setTimeout(()=>{
   start();
 },0);
@@ -19,8 +23,13 @@ setTimeout(()=>{
 
 const start = async () => {
   await coc.load();
-  console.log('::start: coc.topEvidence_:=<',coc.topEvidence_,'>');  
-  console.log('::start: coc.topEvidence_.coc_:=<',coc.topEvidence_.coc_,'>');
+  if(LOG.trace) {
+    console.log('::start: coc.topEvidence_:=<',coc.topEvidence_,'>');
+  }
+  if(LOG.debug) {
+    const topCocPretty = JSON.stringify(coc.topEvidence_.coc_,undefined,2);
+    console.log('::start: topCocPretty:=<',topCocPretty,'>');
+  }
   setTimeout(()=>{
   },1000*10);
 }

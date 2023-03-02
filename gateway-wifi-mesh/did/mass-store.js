@@ -74,6 +74,142 @@ class MassStore {
     return signMsgObj;
   }
 
+  verifyDidDoc(didDoc) {
+    if(MassStore.debug2) {
+      console.log('MassStore::verifyDidDoc::didDoc=<',didDoc,'>');
+    }
+    const isGoodPub = this.verifyDIDPub(didDoc.publicKey);
+    if(isGoodPub === false) {
+      if(MassStore.debug2) {
+        console.log('MassStore::verifyDidDoc::isGoodPub=<',isGoodPub,'>');
+      }
+      return false;
+    }
+    const msgToCalc = JSON.parse(JSON.stringify(didDoc));
+    delete msgToCalc.proof;
+    if(MassStore.debug2) {
+      console.log('MassStore::verifyDidDoc::msgToCalc=<',msgToCalc,'>');
+    }
+    const msgCalcStr = JSON.stringify(msgToCalc);
+    const encoder = new TextEncoder();
+    const hashCalc = nacl.hash(encoder.encode(msgCalcStr));
+    //console.log('MassStore::verify::hashCalc=<',hashCalc,'>');
+    const hashCalc512B64 = nacl.util.encodeBase64(hashCalc);
+    //console.log('MassStore::verify::hashCalc512B64=<',hashCalc512B64,'>');
+    const hashCalclB64 = CryptoJS.SHA1(hashCalc512B64).toString(CryptoJS.enc.Base64);
+    
+    //
+    const isGoodProof = this.verifyDidMsg(hashCalclB64,didDoc.proof,didDoc.publicKey,didDoc.authentication);
+    
+    return isGoodProof;
+    
+    /*
+    const publicKey = nacl.util.decodeBase64(msg.auth.pub);
+    const signMsg = nacl.util.decodeBase64(msg.auth.sign);
+    //console.log('MassStore::verify::publicKey=<',publicKey,'>');
+    //console.log('MassStore::verify::signMsg=<',signMsg,'>');
+    const signedHash = nacl.sign.open(signMsg,publicKey);
+    if(!signedHash) {
+      console.log('MassStore::verify::signedHash=<',signedHash,'>');
+      return false;
+    }
+    const signedHashB64 = nacl.util.encodeBase64(signedHash);
+    //console.log('MassStore::verify::signedHashB64=<',signedHashB64,'>');
+    
+    if(signedHashB64 === hashCalclB64) {
+      msg.from = calcAddress;
+      return true;
+    } else {
+      console.log('MassStore::verify::signedHashB64=<',signedHashB64,'>');
+      console.log('MassStore::verify::hashCalclB64=<',hashCalclB64,'>');
+    }
+    return false;
+    */
+  }
+  verifyDIDPub(publicKeys) {
+    if(MassStore.debug2) {
+      console.log('MassStore::verifyDIDPub::publicKeys=<',publicKeys,'>');
+    }
+    for(const publicKey of publicKeys) {
+      if(publicKey.type !== 'ed25519') {
+        console.log('MassStore::verifyDIDPub::publicKey.type=<',publicKey.type,'>');
+        return false;
+      }
+      const calcAddress = this.calcAddress_(publicKey.publicKeyBase64);
+      if(MassStore.debug2) {
+        console.log('MassStore::verifyDIDPub::calcAddress=<',calcAddress,'>');
+      }
+      if(!calcAddress.startsWith(`mp`)) {
+        console.log('MassStore::verifyDIDPub::calcAddress=<',calcAddress,'>');
+        return false;
+      }
+      if(!publicKey.id.endsWith(`#${calcAddress}`)) {
+        console.log('MassStore::verifyDIDPub::calcAddress=<',calcAddress,'>');
+        console.log('MassStore::verifyDIDPub::publicKey.id=<',publicKey.id,'>');
+        return false;
+      }
+    }
+    return true;
+  }
+  verifyDidMsg(hashCalclB64,proofs,publicKeys,authentications) {
+    for(const proof of proofs) {
+      if(MassStore.debug2) {
+        console.log('MassStore::verifyDIDPub::proof=<',proof,'>');
+      }
+      if(!authentications.includes(proof.creator)) {
+        console.log('MassStore::verifyDIDPub::proof=<',proof,'>');
+        console.log('MassStore::verifyDIDPub::authentications=<',authentications,'>');
+        return false;
+      }
+      let hintPubKey = false;
+      for(const publicKey of publicKeys) {
+        if(publicKey.id === proof.creator) {
+          hintPubKey = true;
+          const isGoodProof = this.verifyDidProof(hashCalclB64,proof,publicKey);
+          if(isGoodProof === false) {
+            console.log('MassStore::verifyDIDPub::proof=<',proof,'>');
+            console.log('MassStore::verifyDIDPub::publicKey=<',publicKey,'>');
+            return false;            
+          }
+        }
+      }
+      if(hintPubKey === false) {
+        console.log('MassStore::verifyDIDPub::proof=<',proof,'>');
+        console.log('MassStore::verifyDIDPub::publicKeys=<',publicKeys,'>');
+        return false;
+      }
+    }
+    return true;
+  }
+  verifyDidProof(hashCalclB64,proof,pubKey) {
+    if(MassStore.trace) {
+      console.log('MassStore::verifyDIDPub::hashCalclB64=<',hashCalclB64,'>');
+      console.log('MassStore::verifyDIDPub::proof=<',proof,'>');
+      console.log('MassStore::verifyDIDPub::pubKey=<',pubKey,'>');
+    }
+    const publicKey = nacl.util.decodeBase64(pubKey.publicKeyBase64);
+    const signMsg = nacl.util.decodeBase64(proof.signatureValue);
+    if(MassStore.trace) {
+      console.log('MassStore::verifyDidProof::publicKey=<',publicKey,'>');
+      console.log('MassStore::verifyDidProof::signMsg=<',signMsg,'>');
+    }
+    const signedHash = nacl.sign.open(signMsg,publicKey);
+    if(!signedHash) {
+      console.log('MassStore::verifyDidProof::signedHash=<',signedHash,'>');
+      return false;
+    }
+    const signedHashB64 = nacl.util.encodeBase64(signedHash);
+    if(signedHashB64 === hashCalclB64) {
+      return true;
+    } else {
+      console.log('MassStore::verifyDidProof::signedHashB64=<',signedHashB64,'>');
+      console.log('MassStore::verifyDidProof::hashCalclB64=<',hashCalclB64,'>');
+      return false;
+    }
+  }
+  
+  
+
   verify(msg) {
     //console.log('MassStore::verify::msg=<',msg,'>');
     const created_at = new Date(msg.ts);
