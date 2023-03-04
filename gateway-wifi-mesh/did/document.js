@@ -169,8 +169,16 @@ class DIDLinkedDocument {
       return false;
     }
     for(const proof of this.didDocWork_.proof) {
-      const isMineProof = proof.creator.endsWith(`#{this.massAuth_}`);
-      if(isMineProof) {
+      if(DIDLinkedDocument.debug) {
+        console.log('DIDLinkedDocument::isComplete:proof=<',proof,'>');
+      }
+      const isHintProof = proof.creator.endsWith(`#${this.massAuth_.address_}`);
+      if(DIDLinkedDocument.debug) {
+        console.log('DIDLinkedDocument::isComplete:proof.creator=<',proof.creator,'>');
+        console.log('DIDLinkedDocument::isComplete:this.massAuth_.address_=<',this.massAuth_.address_,'>');
+        console.log('DIDLinkedDocument::isComplete:isHintProof=<',isHintProof,'>');
+      }
+      if(isHintProof) {
         return true;
       }
     }
@@ -188,11 +196,15 @@ class DIDLinkedDocument {
       creator:`${this.address()}#${this.massAuth_.address_}`,
       signatureValue:signedMsg.auth.sign,
     };
-    this.didDoc_.proof.push(proof);
-    if(DIDLinkedDocument.debug) {
-      console.log('DIDLinkedDocument::completeProof:this.didDoc_=<',this.didDoc_,'>');
+    const newDidDoc = JSON.parse(JSON.stringify(this.didDoc_));
+    if(!newDidDoc.proof) {
+      newDidDoc.proof = [];
     }
-    return this.didDoc_;
+    newDidDoc.proof.push(proof);
+    if(DIDLinkedDocument.debug) {
+      console.log('DIDLinkedDocument::completeProof:newDidDoc=<',newDidDoc,'>');
+    }
+    return newDidDoc;
   }
   
   async loadAuthMass_() {
