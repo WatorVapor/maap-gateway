@@ -13,6 +13,12 @@ const CryptoJS = require('crypto-js');
 const base32 = require('base32.js');
 
 
+const cfConstLevelOption = {
+  createIfMissing: true,
+  keyEncoding: 'utf8',
+  valueEncoding: 'utf8',
+};
+
 class Evidence {
   static trace = false;
   static debug = true;
@@ -74,13 +80,14 @@ class Evidence {
     this.coc_.parent = docJson.parent;
     this.coc_.stage = docJson.stage;
     this.didDoc = new DIDLinkedDocument(docJson.didDoc,cb);
+    this.addressCoc_ = this.calcBlockAddress_();
   }
   createFromParentRemote_(newEvidence) {
     if(Evidence.trace) {
       console.log('Evidence::createFromParentRemote_:newEvidence=<',newEvidence,'>');
     }
     const evidence = new Evidence(null,null,this);
-    evidence.coc_.parent = this.calcBlockAddress_();    
+    evidence.coc_.parent = this.calcBlockAddress_();
     evidence.coc_.stage = 'stable';
     evidence.didDoc = this.didDoc;
     const keyId = this.calcAddress_(newEvidence.auth.pub);
@@ -92,7 +99,7 @@ class Evidence {
       console.log('Evidence::createFromParentLocal_:newEvidence=<',newEvidence,'>');
     }
     const evidence = new Evidence(null,null,this);
-    evidence.coc_.parent = this.calcBlockAddress_();    
+    evidence.coc_.parent = this.calcBlockAddress_();
     evidence.coc_.stage = 'stable';
     evidence.didDoc = this.didDoc;
     evidence.coc_.didDoc = newEvidence.coc_.didDoc;
@@ -103,6 +110,7 @@ class Evidence {
     this.coc_.parent = null;
     this.coc_.stage = 'stable';
     this.didDoc = new DIDSeedDocument(cb);
+    this.addressCoc_ = this.calcBlockAddress_();
   }
   joinDid(docJson) {
     if(Evidence.debug) {
@@ -111,12 +119,13 @@ class Evidence {
     this.coc_.parent = null;
     this.coc_.stage = 'guest';
     this.didDoc = new DIDGuestDocument(docJson.id);
+    this.addressCoc_ = this.calcBlockAddress_();
   }
 
   calcBlockAddress_() {
-    const msgStr = JSON.stringify(this);
+    const msgStr = JSON.stringify(this.coc_);
     if(Evidence.debug) {
-      console.log('Evidence::calcAddress_:msgStr=<',msgStr,'>');
+      console.log('Evidence::calcBlockAddress_:msgStr=<',msgStr,'>');
     }
     const msgB64 = nacl.util.encodeBase64(msgStr);
     return this.calcAddress_(msgB64);
@@ -151,16 +160,14 @@ class ChainOfEvidence {
   static trace = false;
   static debug = true;
   static chainPrefix = 'didteam/cov';
+  static chainStore_ = false;
   constructor(cb) {
     this.topEvidence_ = false;
     this.cb_ = cb;
     this.allBlocks_ = [];
-    const config = {
-      createIfMissing: true,
-      valueEncoding: 'json',
-    };
     try {
-      this.chainStore_ = new Level('.maap_store_evidence_chain', config);
+      if(!ChainOfEvidence.chainStore_)
+      ChainOfEvidence.chainStore_ = new Level('.maap_store_evidence_chain', cfConstLevelOption);
     } catch(err) {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::constructor:err=<',err,'>');
@@ -172,9 +179,9 @@ class ChainOfEvidence {
   }
   destroy() {
     if(ChainOfEvidence.debug) {
-      console.log('ChainOfEvidence::destroy:this.chainStore_.status=<',this.chainStore_.status,'>');
+      console.log('ChainOfEvidence::destroy:ChainOfEvidence.chainStore_.status=<',ChainOfEvidence.chainStore_.status,'>');
     }
-    this.chainStore_.close();
+    ChainOfEvidence.chainStore_.close();
   }
   address() {
     if(ChainOfEvidence.debug) {
@@ -201,7 +208,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::createSeed:this.topEvidence_=<',this.topEvidence_.coc_,'>');
     }
     this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
-    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
+    await ChainOfEvidence.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
     this.saveEvidencesToChain_(this.topEvidence_);
   }
   
@@ -216,7 +223,7 @@ class ChainOfEvidence {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::joinDid:this.topEvidence_.coc_=<',this.topEvidence_.coc_,'>');
     }
-    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
+    await ChainOfEvidence.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(this.topEvidence_.coc_));
   }
   
   
@@ -301,12 +308,12 @@ class ChainOfEvidence {
   }
   
   async loadEvidence_() {
-    await this.chainStore_.open();
+    await ChainOfEvidence.chainStore_.open();
     if(ChainOfEvidence.debug) {
-      console.log('ChainOfEvidence::loadEvidence_:this.chainStore_.status=<',this.chainStore_.status,'>');
+      console.log('ChainOfEvidence::loadEvidence_:ChainOfEvidence.chainStore_.status=<',ChainOfEvidence.chainStore_.status,'>');
     }
     try {
-      const topEviStr = await this.chainStore_.get(strConst.DIDTeamAuthEvidenceTop);
+      const topEviStr = await ChainOfEvidence.chainStore_.get(strConst.DIDTeamAuthEvidenceTop);
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::loadEvidence_:topEviStr=<',topEviStr,'>');
       }
@@ -320,6 +327,7 @@ class ChainOfEvidence {
           await this.topEvidence_.load();
         
           this.topEvidence_.coc_.didDoc = this.topEvidence_.document();
+          this.topAdressCoc = this.topEvidence_.calcBlockAddress_();
           await this.pull2Root_(this.topEvidence_.coc_);
           await this.verifyTopEvidence_();
           await this.createConnection_(this.topEvidence_);
@@ -362,7 +370,8 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::verifyTopEvidence_:newTop.coc_=<',newTop.coc_,'>');
         console.log('ChainOfEvidence::verifyTopEvidence_:newTop.coc_.didDoc=<',newTop.coc_.didDoc,'>');
       }
-      await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(newTop.coc_));
+      await this.saveEvidencesToChain_(this.topEvidence_);
+      await ChainOfEvidence.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(newTop.coc_));
     }
   }
   async createConnection_(topEvid) {
@@ -425,7 +434,7 @@ class ChainOfEvidence {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::saveEvidencesToChain_:chainPath=<',chainPath,'>');
     }
-    await this.chainStore_.put(chainPath,JSON.stringify(evidence.coc_));
+    await ChainOfEvidence.chainStore_.put(chainPath,JSON.stringify(evidence.coc_));
   }
   async pull2Root_(topBlock,cb) {
     if(ChainOfEvidence.debug) {
@@ -444,7 +453,7 @@ class ChainOfEvidence {
         console.log('ChainOfEvidence::pull2RootInternl_:chainPath=<',chainPath,'>');
       }
       try {
-        const value = await this.chainStore_.get(chainPath);
+        const value = await ChainOfEvidence.chainStore_.get(chainPath);
         if(ChainOfEvidence.debug) {
           console.log('ChainOfEvidence::pull2RootInternl_:value=<',value,'>');
         }
@@ -472,7 +481,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',jMsg.top,'>');
       console.log('ChainOfEvidence::onJoinReplyInternal_:jMsg.top=<',JSON.stringify(jMsg.top,undefined,2),'>');
     }
-    await this.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top));
+    await ChainOfEvidence.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top));
     await this.graviton_.clearJWT();
     process.exit(0);
   }

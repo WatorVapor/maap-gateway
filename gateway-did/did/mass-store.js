@@ -9,6 +9,12 @@ const CryptoJS = require('crypto-js');
 const base32 = require('base32.js');
 const { execSync } = require('child_process');
 
+const cfConstLevelOption = {
+  createIfMissing: true,
+  keyEncoding: 'utf8',
+  valueEncoding: 'utf8',
+};
+
 class MassStore {
   static trace = false;
   static debug = false;
@@ -135,7 +141,7 @@ class MassStore {
         console.log('MassStore::verifyDIDPub::publicKey.type=<',publicKey.type,'>');
         return false;
       }
-      const calcAddress = this.calcAddress_(publicKey.publicKeyBase64);
+      const calcAddress = this.calcAddressB64_(publicKey.publicKeyBase64);
       if(MassStore.debug2) {
         console.log('MassStore::verifyDIDPub::calcAddress=<',calcAddress,'>');
       }
@@ -220,7 +226,7 @@ class MassStore {
       console.log('MassStore::verify::escape_ms=<',escape_ms,'>');
       return false;
     } 
-    const calcAddress = this.calcAddress_(msg.auth.pub);
+    const calcAddress = this.calcAddressB64_(msg.auth.pub);
     //console.log('MassStore::verify::calcAddress=<',calcAddress,'>');
     if(!calcAddress.startsWith('mp')) {
       console.log('MassStore::verify::calcAddress=<',calcAddress,'>');
@@ -275,7 +281,7 @@ class MassStore {
       console.log('MassStore::loadSecret:b64Pub=<',b64Pub,'>');
     }
     this.publicKeyB64_ = b64Pub;
-    const address = this.calcAddress_(b64Pub);
+    const address = this.calcAddressB64_(b64Pub);
     this.address_ = address;
     return address;
   }
@@ -296,12 +302,12 @@ class MassStore {
   randomId() {
     const randomBytes = nacl.randomBytes(1024);
     const randomB64 = nacl.util.encodeBase64(randomBytes);
-    const randomAdd = this.calcAddress_(randomB64);
+    const randomAdd = this.calcAddressB64_(randomB64);
     return randomAdd;
   }
   createStore_() {
     if(MassStore.msdb_ === false) {
-      MassStore.msdb_ = new Level('.maap_store_mass', { valueEncoding: 'json' });
+      MassStore.msdb_ = new Level('.maap_store_mass', cfConstLevelOption);
       if(MassStore.trace) {
         console.log('MassStore::createStore_::MassStore.msdb_=<',MassStore.msdb_,'>');
       }
@@ -319,7 +325,7 @@ class MassStore {
         console.log('MassStore::mineMassStoreKey_:keyPair=<',keyPair,'>');
       }
       const b64Pub = nacl.util.encodeBase64(keyPair.publicKey);
-      const address = this.calcAddress_(b64Pub);
+      const address = this.calcAddressB64_(b64Pub);
       if(MassStore.trace) {
         console.log('MassStore::mineMassStoreKey_:address=<',address,'>');
       }
@@ -346,7 +352,7 @@ class MassStore {
     if(MassStore.debug) {
       console.log('MassStore::save2Storage_:b64Pub=<',b64Pub,'>');
     }
-    const address = this.calcAddress_(b64Pub);
+    const address = this.calcAddressB64_(b64Pub);
     if(MassStore.debug) {
       console.log('MassStore::save2Storage_:address=<',address,'>');
     }
@@ -425,25 +431,40 @@ class MassStore {
     }    
     return true;
   }
-  calcAddress_(b64Pub) {
+  calcAddressB64_(b64Pub) {
     const binPub = nacl.util.decodeBase64(b64Pub);
     const hash512 = nacl.hash(binPub);
     const hash512B64 = nacl.util.encodeBase64(hash512);
     const hash1Pub = CryptoJS.SHA1(hash512B64).toString(CryptoJS.enc.Base64);
     if(MassStore.trace) {
-      console.log('MassStore::calcAddress_:hash1Pub=<',hash1Pub,'>');
+      console.log('MassStore::calcAddressB64_:hash1Pub=<',hash1Pub,'>');
     }
     const hash1pubBuffer = nacl.util.decodeBase64(hash1Pub);
     if(MassStore.trace) {
-      console.log('MassStore::calcAddress_:hash1pubBuffer=<',hash1pubBuffer,'>');
+      console.log('MassStore::calcAddressB64_:hash1pubBuffer=<',hash1pubBuffer,'>');
     }
     const encoder = new base32.Encoder({ type: "rfc4648", lc: true });
     const address = encoder.write(hash1pubBuffer).finalize();
     if(MassStore.trace) {
-      console.log('MassStore::calcAddress_:address=<',address,'>');
+      console.log('MassStore::calcAddressB64_:address=<',address,'>');
     }
     return address;
   }
+  
+  calcAddressStr(msgStr) {
+    const msgB64 = nacl.util.encodeBase64(msgStr);
+    return this.calcAddressB64_(msgB64);    
+  }
+
+  calcAddress(obj) {
+    const msgStr = JSON.stringify(obj);
+    if(Evidence.debug) {
+      console.log('MassStore::calcAddressB64_:msgStr=<',msgStr,'>');
+    }
+    const msgB64 = nacl.util.encodeBase64(msgStr);
+    return this.calcAddressB64_(msgB64);    
+  }
+
 }
 module.exports = {
   MassStore:MassStore

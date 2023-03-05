@@ -8,7 +8,7 @@ class Graviton {
   static trace = false;
   static debug = true;
   constructor(evidences,mass,resolve) {
-    if(Graviton.trace) {
+    if(Graviton.debug) {
       console.log('Graviton::constructor:evidences=<',evidences,'>');
     }
     this.evidences_ = evidences;

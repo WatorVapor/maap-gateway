@@ -4,6 +4,11 @@ const MassStore = require('./mass-store.js').MassStore;
 const strConst = require('./const.js');
 
 const iConstOneHourInMs  = 1000 * 3600;
+const cfConstLevelOption = {
+  createIfMissing: true,
+  keyEncoding: 'utf8',
+  valueEncoding: 'utf8',
+};
 
 class GravitonJWT {
   static trace = false;
@@ -19,20 +24,17 @@ class GravitonJWT {
     this.mqttJwt_ = resolve;
     this.mass_ = mass;
     this.cb_ = cb;
-    const config = {
-      createIfMissing: true,
-      valueEncoding: 'json',
-    };
+    this.addressEvid_ = this.mass_.calcAddress(evidences);
+    this.jwtLSKey_ = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.addressEvid_}/${this.mass_.address_}`;
     if(!GravitonJWT.store_) {
-      GravitonJWT.store_ = new Level('.maap_store_graviton', config);
+      GravitonJWT.store_ = new Level('.maap_store_graviton', cfConstLevelOption);
     }
     this.checkLocalStorageOfMqttJwt_();
   }
   async clear() {
-    const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.mass_.address_}`;
     await GravitonJWT.store_.open();
     try {
-      await GravitonJWT.store_.del(jwtLSKey)
+      await GravitonJWT.store_.del(this.jwtLSKey_)
     } catch(err) {
       
     }
@@ -42,16 +44,12 @@ class GravitonJWT {
     if(GravitonJWT.trace) {
       console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:this.mass_=<',this.mass_,'>');
     }
-    const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.mass_.address_}`;
-    if(GravitonJWT.trace) {
-      console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwtLSKey=<',jwtLSKey,'>');
-    }
     await GravitonJWT.store_.open();
     if(GravitonJWT.trace) {
       console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:GravitonJWT.store_.status=<',GravitonJWT.store_.status,'>');
     }
     try {
-      const jwtStr = await GravitonJWT.store_.get(jwtLSKey);
+      const jwtStr = await GravitonJWT.store_.get(this.jwtLSKey_);
       const jwt = JSON.parse(jwtStr);
       if(GravitonJWT.trace) {
         console.log('GravitonJWT::checkLocalStorageOfMqttJwt_:jwt=<',jwt,'>');
@@ -138,7 +136,8 @@ class GravitonJWT {
     const jwtReq = {
       jwt:{
         browser:true,
-        address:this.mass_.address_,
+        addressKey:this.mass_.address_,
+        addressReq:this.addressEvid_,
       },
       evidences:this.evidences_
     }
@@ -154,7 +153,7 @@ class GravitonJWT {
       console.log('onMqttJwtReply_::payload=<',payload,'>');
     }
     if(payload.keyid) {
-      const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${payload.keyid}`;
+      const jwtLSKey = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${payload.reqid}/${payload.keyid}`;
       if(GravitonJWT.trace) {
         console.log('onMqttJwtReply_::jwtLSKey=<',jwtLSKey,'>');
       }
