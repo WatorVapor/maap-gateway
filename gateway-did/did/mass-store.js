@@ -458,7 +458,7 @@ class MassStore {
 
   calcAddress(obj) {
     const msgStr = JSON.stringify(obj);
-    if(Evidence.debug) {
+    if(MassStore.debug) {
       console.log('MassStore::calcAddressB64_:msgStr=<',msgStr,'>');
     }
     const msgB64 = nacl.util.encodeBase64(msgStr);

@@ -224,14 +224,22 @@ class DIDLinkedDocument {
         if(DIDLinkedDocument.debug) {
           console.log('DIDLinkedDocument::loadAuthMass_:keyId=<',keyId,'>');
         }
-        if(keyId && !this.massAuth_) {
+        if(keyId) {
           const mass = new MassStore(keyId);
           const isGood = await mass.load();
           if(DIDLinkedDocument.debug) {
             console.log('DIDLinkedDocument::loadAuthMass_:isGood=<',isGood,'>');
           }
           if(isGood) {
-            this.massAuth_ = mass;            
+            if(DIDLinkedDocument.debug) {
+              console.log('DIDLinkedDocument::loadAuthMass_:this.didDoc_.service=<',this.didDoc_.service,'>');
+            }
+            for(const service of this.didDoc_.service) {
+              if(service.id.endsWith(`#${keyId}`)) {
+                this.massAuth_ = mass;            
+                return;
+              }
+            }
           }
         }
       }

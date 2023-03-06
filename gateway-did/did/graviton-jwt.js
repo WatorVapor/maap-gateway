@@ -11,7 +11,7 @@ const cfConstLevelOption = {
 };
 
 class GravitonJWT {
-  static trace = false;
+  static trace = true;
   static debug = true;
   
   static store_ = false;
@@ -26,8 +26,11 @@ class GravitonJWT {
     this.cb_ = cb;
     this.addressEvid_ = this.mass_.calcAddress(evidences);
     this.jwtLSKey_ = `${strConst.DIDTeamAuthGravitonJwtPrefix}/${this.addressEvid_}/${this.mass_.address_}`;
+    if(GravitonJWT.trace) {
+      console.log('GravitonJWT::constructor:this.jwtLSKey_=<',this.jwtLSKey_,'>');
+    }
     if(!GravitonJWT.store_) {
-      GravitonJWT.store_ = new Level('.maap_store_graviton', cfConstLevelOption);
+      GravitonJWT.store_ = new Level('.maap_store_graviton_jwt', cfConstLevelOption);
     }
     this.checkLocalStorageOfMqttJwt_();
   }
