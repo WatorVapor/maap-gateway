@@ -39,5 +39,15 @@ const start = async () => {
 }
 
 const onCheckMissBlock = () => {
-  console.log('::onCheckMissBlock::coc.allBlocks_:=<',coc.allBlocks_,'>');
+  if(LOG.trace) {
+    console.log('::onCheckMissBlock::coc.allBlocks_:=<',coc.allBlocks_,'>');
+  }
+  for(const block of coc.allBlocks_) {
+    const address = coc.topEvidence_.calcAddress(block);
+    if(LOG.debug) {
+      console.log('::onCheckMissBlock::block:=<',block,'>');
+      console.log('::onCheckMissBlock::address:=<',address,'>');
+    }
+  }
 }
+

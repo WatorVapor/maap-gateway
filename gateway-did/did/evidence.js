@@ -120,14 +120,24 @@ class Evidence {
     this.didDoc = new DIDGuestDocument(docJson.id);
     this.addressCoc_ = this.calcBlockAddress_();
   }
+  calcAddress(msg) {
+    const address = this.didDoc.massAuth_.calcAddress(msg);
+    if(Evidence.trace) {
+      console.log('Evidence::calcBlockAddress_:address=<',address,'>');
+    }
+    return address
+  }
+
 
   calcBlockAddress_() {
-    const address2 = this.didDoc.massAuth_.calcAddress(this.coc_);
-    if(Evidence.debug) {
-      console.log('Evidence::calcBlockAddress_:address2=<',address2,'>');
+    const address = this.didDoc.massAuth_.calcAddress(this.coc_);
+    if(Evidence.trace) {
+      console.log('Evidence::calcBlockAddress_:address=<',address,'>');
     }
-    return address2
+    return address
   }
+
+
 }
 
 class ChainOfEvidence {
