@@ -108,29 +108,6 @@ class MassStore {
     const isGoodProof = this.verifyDidMsg(hashCalclB64,didDoc.proof,didDoc.publicKey,didDoc.authentication);
     
     return isGoodProof;
-    
-    /*
-    const publicKey = nacl.util.decodeBase64(msg.auth.pub);
-    const signMsg = nacl.util.decodeBase64(msg.auth.sign);
-    //console.log('MassStore::verify::publicKey=<',publicKey,'>');
-    //console.log('MassStore::verify::signMsg=<',signMsg,'>');
-    const signedHash = nacl.sign.open(signMsg,publicKey);
-    if(!signedHash) {
-      console.log('MassStore::verify::signedHash=<',signedHash,'>');
-      return false;
-    }
-    const signedHashB64 = nacl.util.encodeBase64(signedHash);
-    //console.log('MassStore::verify::signedHashB64=<',signedHashB64,'>');
-    
-    if(signedHashB64 === hashCalclB64) {
-      msg.from = calcAddress;
-      return true;
-    } else {
-      console.log('MassStore::verify::signedHashB64=<',signedHashB64,'>');
-      console.log('MassStore::verify::hashCalclB64=<',hashCalclB64,'>');
-    }
-    return false;
-    */
   }
   verifyDIDPub(publicKeys) {
     if(MassStore.debug2) {

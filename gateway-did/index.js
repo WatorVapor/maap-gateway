@@ -32,4 +32,12 @@ const start = async () => {
   }
   setTimeout(()=>{
   },1000*10);
+  
+  setInterval(()=>{
+    onCheckMissBlock();
+  },1000*10);
+}
+
+const onCheckMissBlock = () => {
+  console.log('::onCheckMissBlock::coc.allBlocks_:=<',coc.allBlocks_,'>');
 }

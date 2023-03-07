@@ -47,6 +47,7 @@ class Evidence {
     if(Evidence.trace) {
       console.log('Evidence::load:this.didDoc=<',this.didDoc,'>');
     }
+    this.addressCoc_ = this.calcBlockAddress_();
   }
   address(){
     if(this.didDoc) {
@@ -80,7 +81,6 @@ class Evidence {
     this.coc_.parent = docJson.parent;
     this.coc_.stage = docJson.stage;
     this.didDoc = new DIDLinkedDocument(docJson.didDoc,cb);
-    this.addressCoc_ = this.calcBlockAddress_();
   }
   createFromParentRemote_(newEvidence) {
     if(Evidence.trace) {
@@ -110,7 +110,6 @@ class Evidence {
     this.coc_.parent = null;
     this.coc_.stage = 'stable';
     this.didDoc = new DIDSeedDocument(cb);
-    this.addressCoc_ = this.calcBlockAddress_();
   }
   joinDid(docJson) {
     if(Evidence.debug) {
@@ -123,37 +122,12 @@ class Evidence {
   }
 
   calcBlockAddress_() {
-    const msgStr = JSON.stringify(this.coc_);
+    const address2 = this.didDoc.massAuth_.calcAddress(this.coc_);
     if(Evidence.debug) {
-      console.log('Evidence::calcBlockAddress_:msgStr=<',msgStr,'>');
+      console.log('Evidence::calcBlockAddress_:address2=<',address2,'>');
     }
-    const msgB64 = nacl.util.encodeBase64(msgStr);
-    return this.calcAddress_(msgB64);
+    return address2
   }
-  calcStrAddress_(msgStr) {
-    const msgB64 = nacl.util.encodeBase64(msgStr);
-    return this.calcAddress_(msgB64);    
-  }
-  calcAddress_(msgB64) {
-    const msgBin = nacl.util.decodeBase64(msgB64);
-    const sha512 = nacl.hash(msgBin);
-    const sha512B64 = nacl.util.encodeBase64(sha512);
-    const sha1B64 = CryptoJS.SHA1(sha512B64).toString(CryptoJS.enc.Base64);
-    if(Evidence.trace) {
-      console.log('Evidence::calcAddress_:sha1B64=<',sha1B64,'>');
-    }
-    const sha1Buffer = nacl.util.decodeBase64(sha1B64);
-    if(Evidence.trace) {
-      console.log('Evidence::calcAddress_:sha1Buffer=<',sha1Buffer,'>');
-    }
-    const encoder = new base32.Encoder({ type: "rfc4648", lc: true });
-    const address = encoder.write(sha1Buffer).finalize();
-    if(Evidence.trace) {
-      console.log('Evidence::calcAddress_:address=<',address,'>');
-    }
-    return address;
-  }
-
 }
 
 class ChainOfEvidence {
