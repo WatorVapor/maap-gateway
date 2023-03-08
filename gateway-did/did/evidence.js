@@ -149,6 +149,7 @@ class ChainOfEvidence {
     this.topEvidence_ = false;
     this.cb_ = cb;
     this.allBlocks_ = [];
+    this.mapBlocks_ = {};
     try {
       if(!ChainOfEvidence.chainStore_)
       ChainOfEvidence.chainStore_ = new Level('.maap_store_evidence_chain', cfConstLevelOption);
@@ -315,6 +316,15 @@ class ChainOfEvidence {
           await this.pull2Root_(this.topEvidence_.coc_);
           await this.verifyTopEvidence_();
           await this.createConnection_(this.topEvidence_);
+          
+          for(const block of this.allBlocks_) {
+            const address = this.topEvidence_.calcAddress(block);
+            if(ChainOfEvidence.debug) {
+              console.log('ChainOfEvidence::loadEvidence_::block:=<',block,'>');
+              console.log('ChainOfEvidence::loadEvidence_::address:=<',address,'>');
+              this.mapBlocks_[address] = block;
+            }
+          }
         }
       } else {
       }
