@@ -247,6 +247,49 @@ class ChainOfEvidence {
     };
     this.graviton_.publish(topic,msg);
   }
+
+  syncTopBlock() {
+    if(ChainOfEvidence.trace) {
+      console.log('ChainOfEvidence::syncTopBlock:this.topEvidence_=<',this.topEvidence_,'>');
+    }
+    if(!this.graviton_ ) {
+      console.log('ChainOfEvidence::syncTopBlock:this.graviton_=<',this.graviton_,'>');
+      return;      
+    }
+    if(ChainOfEvidence.trace) {
+      console.log('ChainOfEvidence::syncTopBlock:this.graviton_=<',this.graviton_,'>');
+    }
+    const topic = `${this.topEvidence_.address()}/cov/sync/top`;
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::syncTopBlock:topic=<',topic,'>');
+    }
+    const msg = {
+      evidence:this.topEvidence_,
+    };
+    this.graviton_.publish(topic,msg);
+  }
+  
+  syncStackedBlock(blockAddress) {
+    if(!this.graviton_ ) {
+      console.log('ChainOfEvidence::syncStackedBlock:this.graviton_=<',this.graviton_,'>');
+      return;      
+    }
+    if(ChainOfEvidence.trace) {
+      console.log('ChainOfEvidence::syncStackedBlock:this.graviton_=<',this.graviton_,'>');
+    }
+    const topic = `${this.topEvidence_.address()}/cov/req/stacked`;
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::syncStackedBlock:topic=<',topic,'>');
+    }
+    const msg = {
+      request:{
+        address:blockAddress
+      }
+    };
+    this.graviton_.publish(topic,msg);
+  }  
+  
+
   async allowJoinTeam(reqMsg) {
     if(ChainOfEvidence.debug) {
       console.log('ChainOfEvidence::allowJoinTeam:reqMsg=<',reqMsg,'>');

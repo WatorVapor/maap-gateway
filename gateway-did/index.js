@@ -42,7 +42,8 @@ const start = async () => {
 const syncTopBlock = () => {
   if(LOG.debug) {
     console.log('::syncTopBlock::coc.topEvidence_.coc_:=<',coc.topEvidence_.coc_,'>');
-  }  
+  }
+  coc.syncTopBlock();
 }
 
 const onCheckMissBlock = () => {
@@ -76,6 +77,7 @@ const requestSyncStackedBlock = (blockAddress) => {
   if(LOG.debug) {
     console.log('::requestSyncStackedBlock::blockAddress:=<',blockAddress,'>');
   }    
+  coc.syncStackedBlock(blockAddress);
 }
 
 
