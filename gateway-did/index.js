@@ -62,7 +62,7 @@ const onCheckMissBlock = () => {
     if(LOG.trace) {
       console.log('::onCheckMissBlock::hintParent:=<',hintParent,'>');
     }
-    if(!hintParent) {
+    if(!hintParent && parentAdd) {
       if(LOG.trace) {
         console.log('::onCheckMissBlock::hintParent:=<',hintParent,'>');
         console.log('::onCheckMissBlock::parentAdd:=<',parentAdd,'>');

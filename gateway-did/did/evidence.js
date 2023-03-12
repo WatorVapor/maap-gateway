@@ -452,6 +452,14 @@ class ChainOfEvidence {
       if(typeof this.onJoinReplyInternal_ === 'function') {
         this.onJoinReplyInternal_(jMsg);
       }
+    } else if(topic.endsWith('cov/sync/stacked')){
+      if(ChainOfEvidence.debug) {
+        console.log('ChainOfEvidence::onMQTTMsg_:topic=<',topic,'>');
+        console.log('ChainOfEvidence::onMQTTMsg_:this.onSyncStackedInternal_=<',this.onSyncStackedInternal_,'>');
+      }
+      if(typeof this.onSyncStackedInternal_ === 'function') {
+        this.onSyncStackedInternal_(jMsg.address,jMsg.block);
+      }
     } else {
       if(ChainOfEvidence.debug) {
         console.log('ChainOfEvidence::onMQTTMsg_:topic=<',topic,'>');
@@ -521,6 +529,17 @@ class ChainOfEvidence {
     await ChainOfEvidence.chainStore_.put(strConst.DIDTeamAuthEvidenceTop,JSON.stringify(jMsg.top));
     await this.graviton_.clearJWT();
     process.exit(0);
+  }
+  async onSyncStackedInternal_(chainAddress,block) {
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::onSyncStackedInternal_:chainAddress=<',chainAddress,'>');
+      console.log('ChainOfEvidence::onSyncStackedInternal_:block=<',block,'>');
+    }    
+    const chainPath = `${ChainOfEvidence.chainPrefix}/${chainAddress}`;
+    if(ChainOfEvidence.debug) {
+      console.log('ChainOfEvidence::saveEvidencesToChain_:chainPath=<',chainPath,'>');
+    }
+    await ChainOfEvidence.chainStore_.put(chainPath,JSON.stringify(block));
   }
 }
 
