@@ -32,7 +32,7 @@ const start = async () => {
   }
   setTimeout(()=>{
     syncTopBlock();
-  },1000*10);
+  },1000*2);
   
   setInterval(()=>{
     onCheckMissBlock();

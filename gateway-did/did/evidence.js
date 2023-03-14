@@ -102,7 +102,7 @@ class Evidence {
     evidence.coc_.parent = this.calcBlockAddress_();
     evidence.coc_.stage = 'stable';
     evidence.didDoc = this.didDoc;
-    evidence.coc_.didDoc = newEvidence.coc_.didDoc;
+    evidence.coc_.didDoc = JSON.parse(JSON.stringify(newEvidence.coc_.didDoc));
     return evidence;
   }
 
@@ -264,7 +264,7 @@ class ChainOfEvidence {
       console.log('ChainOfEvidence::syncTopBlock:topic=<',topic,'>');
     }
     const msg = {
-      evidence:this.topEvidence_,
+      coc:this.topEvidence_.coc_,
     };
     this.graviton_.publish(topic,msg);
   }

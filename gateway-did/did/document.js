@@ -139,7 +139,6 @@ class DIDLinkedDocument {
     if(newDidDoc.authentication.indexOf(keyIdFull) === -1){
       newDidDoc.authentication.push(keyIdFull);
     }
-   
     
     delete newDidDoc.proof;
     const creator = `${didCode}#${this.massAuth_.address_}`;
@@ -189,6 +188,7 @@ class DIDLinkedDocument {
       console.log('DIDLinkedDocument::completeProof:this.didDoc_=<',this.didDoc_,'>');
     }
     const didDoc = JSON.parse(JSON.stringify(this.didDoc_));
+    didDoc.updated = (new Date()).toISOString();
     delete didDoc.proof;
     const signedMsg = this.massAuth_.signWithoutTS(didDoc);
     const proof = {
