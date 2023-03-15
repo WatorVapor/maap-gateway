@@ -188,7 +188,6 @@ class DIDLinkedDocument {
       console.log('DIDLinkedDocument::completeProof:this.didDoc_=<',this.didDoc_,'>');
     }
     const didDoc = JSON.parse(JSON.stringify(this.didDoc_));
-    didDoc.updated = (new Date()).toISOString();
     delete didDoc.proof;
     const signedMsg = this.massAuth_.signWithoutTS(didDoc);
     const proof = {
