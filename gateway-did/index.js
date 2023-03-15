@@ -1,5 +1,6 @@
 const process = require('process');
 const evidence = require('./did/evidence.js')
+const MaapLocalProxy = require('./maap_proxy.js')
 const ChainOfEvidence = evidence.ChainOfEvidence;
 const LOG = {
   trace:false,
@@ -80,4 +81,24 @@ const requestSyncStackedBlock = (blockAddress) => {
   coc.syncStackedBlock(blockAddress);
 }
 
+
+const constMaapProxy = new MaapLocalProxy('maap/m2e','maap/e2m/*',(topic,msg)=>{
+  if(LOG.debug) {
+    console.log('::constMaapProxy::topic:=<',topic,'>');
+    console.log('::constMaapProxy::msg:=<',msg,'>');
+  }
+  onEdgeMsg(topic,msg);
+});
+
+const onEdgeMsg = (topic,msg) => {
+  if(LOG.debug) {
+    console.log('::onEdgeMsg::topic:=<',topic,'>');
+    console.log('::onEdgeMsg::msg:=<',msg,'>');
+  }  
+}
+
+
+if(LOG.debug) {
+  console.log('::::constMaapProxy:=<',constMaapProxy,'>');
+}
 
