@@ -1,0 +1,24 @@
+V1.8 Build0519
+Improvement: Added the support on LC02H (AA), LC26G-T (AA), L26DR (AA), LC260Z, LC760Z and LC02H (BA).
+Improvement: Added the "Expert" option on "Firmware Upgrade" interface of LG69T series.
+Improvement: Added "DTR" and "RTS" options in the status bar.
+Improvement: Added the support on LC26G-T (AA), LC760Z, LC260Z, LC02H (AA), LC02H (BA) and LC29H (EA) firmware download.
+Improvement: Added module log storage methods of "Size File" and "Daily File".
+Improvement: Updated the control way of "Read Rate" at "Player" interface.
+Improvement: Updated "Deviation Map" sub-window.
+Improvement: Added a feature of "Data Dock" supporting to display DR status on LC29D (C) and LC79D (C).
+Bug fix: Fixed the issue of CEP calculation error.
+Bug fix: Fixed the issue of failing to download LC760Z offline AGNSS file.
+Bug fix: Fixed the known bugs.
+
+V1.7 Build1202
+Improvement: Added the "Coordinate Converter" feature at "Tools".
+Improvement: Added a feature that when the software is opened again, the previous page layout will be showed.
+Improvement: Updated the "Player" feature.
+Improvement: Added the support on keyword searching in the model selection box.
+Improvement: Added the support on LC29T (AA).
+Improvement: Added "2D Acc" and "3D Acc" display boxes in "Data Dock" interface.
+Improvement: Added "NMEA Convert KML" feature at "Tools".
+Improvement: Updated the QGNSSLog tool.
+Bug fix: Fixed the issue of "Deviation Map" point displaying error.
+Bug fix: Fixed the issue of failing to download LC29H AGNSS file.

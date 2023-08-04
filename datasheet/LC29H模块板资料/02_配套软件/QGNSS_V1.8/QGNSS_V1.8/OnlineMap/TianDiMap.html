@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="keywords" content="天地�?" />
+    <title>天地图－地图API－范例－添加标注</title>
+    <script type="text/javascript"
+        src="http://api.tianditu.gov.cn/api?v=4.0&tk=%1"></script>
+    <style type="text/css">
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "Microsoft YaHei"
+        }
+
+        #mapDiv {
+            width: 100%;
+            height: 100%
+        }
+
+        input,
+        b,
+        p {
+            margin-left: 5px;
+            font-size: 14px
+        }
+
+        #Custom {
+            position: fixed;
+            z-index: 999;
+        }
+    </style>
+    <script>
+        var zoom = 12;
+        var map;
+        function onLoad() {
+            map = new T.Map("mapDiv");
+            map.centerAndZoom(new T.LngLat(117.11577633, 31.82231317), zoom);
+        }
+
+        function addmarker(Lon, Lat) {
+            //创建标注对象
+            var marker = new T.Marker(new T.LngLat(Lon, Lat));
+            //向地图上添加标注
+            map.addOverLay(marker);
+            if(document.getElementById("autoCenter").checked)
+                map.centerAndZoom(new T.LngLat(Lon, Lat),  map.getZoom());
+        }
+
+        function remove_overlay() {
+            map.clearOverLays();
+        }
+    </script>
+</head>
+
+<body onLoad="onLoad()">
+    
+    <div id="Custom">
+        <label style="color:rgb(18, 18, 19);">
+
+            <input type="checkbox" id="autoCenter" checked>Auto-set center
+        </label>
+    </div>
+    <div id="mapDiv"></div>
+
+</body>
+
+</html>
