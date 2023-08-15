@@ -1,0 +1,31 @@
+-----------------------------geortk.jp: 2101-------------------------------
+SOURCETABLE 200 OK
+Server: NTRIP BKG Caster 2.0.37/2.0
+Date: Wed, 09 Aug 2023 13:40:08 GMT
+Connection: close
+Content-Type: text/plain
+Content-Length: 5207
+
+-----------------------------geortk.jp: 2101-------------------------------
+SOURCETABLE 200 OK
+Server: NTRIP BKG Caster 2.0.37/2.0
+Date: Wed, 09 Aug 2023 13:40:21 GMT
+Connection: close
+Content-Type: text/plain
+Content-Length: 5066
+
+-----------------------------rtk2go.com: 2101-------------------------------
+SOURCETABLE 200 OK
+Server: SubCarrier Systems Corp SNIP simpleNTRIP_Caster_[wPRO]R3.10.27/of:Aug 02 2023
+Date: Wed, 09 August 2023 13:41:03 UTC
+Content-Type: text/plain
+Content-Length: 91208
+
+STR;ACACU;Curug;RTCM 3.2;1005(30),1074(1),1084(1),1094(1);2;GPS+GLO+GAL;SNIP;SRB;45.47;20.06;1;0;sNTRIP;none;B;N;3340;
+STR;ACAKO;Kovin;RTCM 3.2;1005(30),1074(1),1084(1),1094(1);2;GPS+GLO+GAL;SNIP;SRB;44.75;21.01;1;0;sNTRIP;none;B;N;3280;
+STR;ACAMP-ROOF;Leduc;RTCM 3.2;1005(1),1077(1),1087(1),1097(1),1127(1),1230(10),4072(1);2;GPS+GLO+GAL+BDS;SNIP;CAN;53.31;-113.58;1;0;sNTRIP;none;B;N;7660;
+STR;ACASU;Subotica;RTCM 3.2;1005(30),1074(1),1084(1),1094(1);0;GPS+GLO+GAL;SNIP;SRB;46.06;19.52;1;0;sNTRIP;none;B;N;0;
+STR;ADS-SAH;Ciudad Real;RTCM 3.2;1005(1),1074(1),1084(1),1094(1),1230(1);2;GPS+GLO+GAL;SNIP;ESP;39.05;-4.06;1;0;sNTRIP;none;B;N;3760;
+STR;AgPartner_1;Zaleszany;RTCM 3.3;1004(1),1005(30),1012(1),1019(2),1033(30),1042(3),1046(4),1077(1),1087(1),1097(1),1107(1),1127(1),1230(30);2;GPS+GLO+GAL+BDS+SBS;SNIP;POL;53.62;17.23;1;0;sNTRIP;none;B;N;11820;
+STR;AgPartner_2;Bozewo;RTCM 3.3;1004(1),1005(10),1007(30),1008(10),1012(1),1033(10),1042(4),1046(2),1075(1),1077(1),1085(1),1087(1),1095(1),1097(1),1107(1),1125(1),1127(1),1230(30);2;GPS+GLO+GAL+BDS+SBS;SNIP;POL;52.70;19.57;1;0;sNTRIP;none;B;N;23400;
+STR;AGROORSOLIC;Orasje;RTCM 3.3;1004(1),1005(10),1008(10),1012(1),1019(3),1020(2),1033(10),1042(3),10
